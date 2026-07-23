@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Email Dutch Politicians</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: auto;
+            padding: 16px;
+            background: linear-gradient(to bottom right, #f7fafc, #e6f0ff);
+        }
+        h2 { text-align: center; color: #1a365d; }
+        .instruction-container { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+        .inst-box {
+            flex: 1; 
+            min-width: 280px; 
+            background: white; 
+            padding: 16px;
+            border-radius: 10px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); 
+            font-size: 14px;
+            color: #1e293b !important; 
+            line-height: 1.5;
+        }
+        .rtl { direction: rtl; text-align: right; font-family: Tahoma, Arial, sans-serif; }
+        select, textarea, input, button {
+            width: 100%; margin: 8px 0; padding: 12px;
+            font-size: 16px; border-radius: 8px; border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+        .btn-generate { background: #2b6cb0; color: white; border: none; cursor: pointer; font-weight: bold; }
+        .button-group { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+        .flex-row { display: flex; gap: 10px; }
+        .btn-web { background: #2c5282; color: white; font-weight: bold; cursor: pointer; border: none; height: 50px; }
+        .btn-mobile { background: #38a169; color: white; font-weight: bold; cursor: pointer; border: none; height: 50px; }
+        .btn-copy { background: #718096; color: white; font-weight: bold; cursor: pointer; border: none; }
+        textarea { min-height: 200px; }
+        .translation-box { 
+            background: #ffffff; 
+            padding: 20px; 
+            border-radius: 10px; 
+            border: 2px solid #cbd5e1; 
+            font-size: 16px; 
+            color: #1e293b; 
+            margin-top: 15px;
+            line-height: 1.6;
+            text-align: left;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+            white-space: pre-wrap;
+        }
+        .chart-container {
+            background: white !important;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            position: relative;
+            height: 600px; 
+            width: 100%;
+        }
+        #statsChart { width: 100% !important; height: 100% !important; }
+        .label-bold { color: #1e293b !important; font-weight: bold; margin-top: 15px; display: block; }
+        #topic { border: 2px solid #2b6cb0; background-color: #f0f7ff; font-weight: bold; }
+    </style>
+</head>
+
+<body>
+
+    <h2>Email Dutch Politicians</h2>
+
+  <div class="instruction-container">
+        <div class="inst-box" style="border-left: 5px solid #2b6cb0;">
+            <strong style="color: #2b6cb0;">Action Steps:</strong>
+            <p style="margin: 5px 0; font-size: 13px; color: #4a5568;">
+                🚩 You can check the <b>Live Action Tracker</b> to choose politicians with lower numbers.
+            </p>
+            <hr style="border: 0; border-top: 1px solid #edf2f7; margin: 10px 0;">
+            <strong>Steps:</strong>
+            <div style="margin-top: 5px;">
+                1. <b>Choose Campaign Topic</b> (Sit-in or Executions).<br>
+                2. Enter Name/City.<br>
+                3. Select Politician & Email Version.<br>
+                4. Click <b>Generate Content</b>.<br>
+                5. Click <b>Mobile</b> or <b>Web</b>.<br>
+                <b style="color: #c53030;">⚠️ Mobile: Use Gmail (Outlook Mobile has bugs).</b>
+            </div>
+            <p style="margin-top: 10px; font-size: 13px; color: #2d3748; font-style: italic;">
+                ℹ️ You can see the <b>English translation</b> of the Dutch email in the preview box below.
+            </p>
+        </div>
+
+        <div class="inst-box rtl" style="border-right: 5px solid #38a169;">
+            <strong style="color: #38a169;">مراحل اقدام:</strong>
+            <p style="margin: 5px 0; font-size: 13px; color: #4a5568;">
+                🚩 ابتدا می‌توانید نمودار پایین صفحه را چک کنید تا به سیاستمداران با تعداد ایمیل کمتر ایمیل بفرستید.
+            </p>
+            <hr style="border: 0; border-top: 1px solid #edf2f7; margin: 10px 0;">
+            <strong>مراحل:</strong>
+            <div style="margin-top: 5px;">
+                ۱. <b>موضوع کمپین را انتخاب کنید</b> (تحصن یا اعدام).<br>
+                ۲. نام و شهر خود را وارد کنید.<br>
+                ۳. سیاستمدار و نسخه را انتخاب کنید.<br>
+                ۴. دکمه <b>Generate Content</b> را بزنید.<br>
+                ۵. روی <b>Mobile</b> یا <b>Web</b> کلیک کنید.<br>
+                <b style="color: #c53030;">⚠️ در موبایل حتما از برنامه Gmail استفاده کنید.</b>
+            </div>
+            <p style="margin-top: 10px; font-size: 13px; color: #2d3748; font-style: italic;">
+                ℹ️ شما می‌توانید <b>ترجمه انگلیسی</b> متن ایمیل هلندی را در پایین همان بخش مشاهده کنید.
+            </p>
+        </div>
+    </div>
+
+    <h3>Stop Daily Executions Campaign</h3>
+
+    <span class="label-bold">2. Enter Your Details (مشخصات شما):</span>
+    <input id="username" placeholder="Your Name (optional)">
+    <input id="city" placeholder="City (optional)">
+
+    <span class="label-bold">3. Choose the Politician (Party):</span>
+    <select id="politician"></select>
+    
+    <span class="label-bold">4. Choose an Email Version (1 to 5):</span>
+    <select id="version"></select>
+
+    <button class="btn-generate" onclick="generateEmail()">Generate Email Content</button>
+
+    <hr style="margin: 30px 0; border: 0; border-top: 1px solid #cbd5e1;">
+
+    <span class="label-bold">Subject (Onderwerp):</span>
+    <input id="subject" readonly>
+    <span class="label-bold">Recipient (Ontvanger):</span>
+    <input id="recipient" readonly>
+    <span class="label-bold">Preview (Dutch Content to be Sent):</span>
+    <textarea id="output" readonly></textarea>
+
+    <div id="translation-area" class="translation-box" style="display:none;">
+        <strong style="color: #2b6cb0; display: block; margin-bottom: 5px;">Subject Translation:</strong>
+        <div id="trans-subject" style="margin-bottom: 15px; font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 5px;"></div>
+        <strong style="color: #2b6cb0; display: block; margin-bottom: 5px;">Body Translation (English):</strong>
+        <div id="translation-text"></div>
+    </div>
+
+    <div class="button-group">
+        <div class="flex-row">
+            <button onclick="openMail('web')" class="btn-web">1. Open Email (PC/Outlook)</button>
+            <button onclick="openMail('mobile')" class="btn-mobile">2. Open Email (Mobile/Gmail)</button>
+        </div>
+        <button class="btn-copy" onclick="copyAll()">3. Copy All to Clipboard</button>
+    </div>
+
+    <div class="chart-container">
+        <div style="text-align: center; margin-bottom: 10px;">
+            <strong id="chartTitle" style="color: #1a365d; font-size: 18px;">Live Action Tracker</strong>
+        </div>
+        <canvas id="statsChart"></canvas>
+    </div>
+
+<script>
+const SUPABASE_URL = 'https://tizmgyhtydyudjozgbgq.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_veX7XCXUYYswI-KOVRdK7A_B2rel21w';
+const { createClient } = supabase;
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const politicians = {
+    "Caspar Veldkamp (NSC)": ["c.veldkamp@tweedekamer.nl", "p.omtzigt@tweedekamer.nl", "n.vandenhil@tweedekamer.nl", "info@partijnieuwsociaalcontract.nl"],
+    "Ruben Brekelmans (VVD)": ["r.brekelmans@tweedekamer.nl", "d.yesilgoz@tweedekamer.nl", "s.erkens@tweedekamer.nl", "info@vvd.nl"],
+    "Jan Paternotte (D66)": ["j.paternotte@tweedekamer.nl", "s.sjoerdsma@tweedekamer.nl", "h.hammelburg@tweedekamer.nl", "info@d66.nl"],
+    "Jesse Klaver (GL-PvdA)": ["j.klaver@tweedekamer.nl", "k.piri@tweedekamer.nl", "s.maatoug@tweedekamer.nl", "info@groenlinks.nl"],
+    "Geert Wilders (PVV)": ["g.wilders@tweedekamer.nl", "m.markuszower@tweedekamer.nl", "r.deroon@tweedekamer.nl", "pvv.publiek@tweedekamer.nl"],
+    "Laurens Dassen (Volt)": ["l.dassen@tweedekamer.nl", "n.koekkoek@tweedekamer.nl", "s.bamenga@tweedekamer.nl", "info@voltnederland.org"],
+    "Henri Bontenbal (CDA)": ["h.bontenbal@tweedekamer.nl", "d.boswijk@tweedekamer.nl", "p.heerma@tweedekamer.nl", "info@cda.nl"],
+    "Chris Stoffer (SGP)": ["c.stoffer@tweedekamer.nl", "r.bisschop@tweedekamer.nl", "k.vandermolen@tweedekamer.nl", "info@sgp.nl"],
+    "Mirjam Bikker (ChristenUnie)": ["m.bikker@tweedekamer.nl", "d.ceder@tweedekamer.nl", "e.vandergraaf@tweedekamer.nl", "info@christenunie.nl"],
+    "Esther Ouwehand (PvdD)": ["esther.ouwehand@tweedekamer.nl", "c.teunissen@tweedekamer.nl", "f.wassenberg@tweedekamer.nl", "info@partijvdedieren.nl"],
+    "Joost Eerdmans (JA21)": ["b.eerdmans@tweedekamer.nl", "s.pouw-verweij@tweedekamer.nl", "j.eppink@tweedekamer.nl", "info@ja21.nl"],
+    "Jimmy Dijk (SP)": ["j.dijk@tweedekamer.nl", "j.jaspervandijk@tweedekamer.nl", "s.beckerman@tweedekamer.nl", "info@sp.nl"],
+    "Lidewij de Vos (FVD)": ["l.dvos@tweedekamer.nl", "t.baudet@tweedekamer.nl", "p.vanmeijeren@tweedekamer.nl", "partij@fvd.nl"]
+};
+
+const campaignData = {
+    executions: {
+        subjects: {
+            "Version 1": "URGENT: Ultimatum vereist om staatsslachting in Iran te stoppen",
+            "Version 2": "Stop de executies in Iran: Sluit de ambassade en bevries IRGC-tegoeden",
+            "Version 3": "Actie vereist: Beëindig de psychologische oorlog en executies in Iran",
+            "Version 4": "Ultimatum voor de Islamitische Republiek: Stop de moorden of vertrek",
+            "Version 5": "Executiecrisis: Eis voor onmiddellijke sluiting van de Iraanse ambassade"
+        },
+        subjectsTrans: {
+            "Version 1": "URGENT: Ultimatum required to stop the state-led slaughter in Iran",
+            "Version 2": "Stop the executions in Iran: Close the embassy and freeze IRGC assets",
+            "Version 3": "Action required: End the psychological war and executions in Iran",
+            "Version 4": "Ultimatum for the Islamic Republic: Stop the killings or face departure",
+            "Version 5": "Execution Crisis: Demand for immediate closure of the Iranian embassy"
+        },
+        bodies: {
+            "Version 1": "Geachte [NAME],\n\nDe Islamitische Republiek voert momenteel een psychologische oorlog tegen Iraanse burgers, zowel binnen als buiten Iran. Terwijl het land al 40 dagen volledig is afgesloten van het internet, worden duizenden gevangen genomen demonstranten geëxecuteerd. Dit volgt op het bloedbad van januari, waarbij tienduizenden werden vermoord na de oproep van kroonprins Reza Pahlavi tot landelijke protesten.\n\nVrijblijvende diplomatie werkt niet. Wij eisen dat u de overheid dwingt tot een direct ultimatum: als de executies van demonstranten niet onmiddellijk stoppen, moet Nederland de ambassade van de Islamitische Republiek sluiten, hun diplomaten uitzetten en alle tegoeden van de IRGC onmiddellijk bevriezen.\n\nMet vriendelijke groet,\n[USER]\n[CITY]",
+            "Version 2": "Geachte [NAME],\n\nMet de internetblokkade die nu al 40 dagen duurt, probeert de Islamitische Republiek haar misdaden tegen de menselijkheid te verbergen. Dagelijks worden jonge demonstranten geëxecuteerd als onderdeel van een schrikbewind. Deze terreur volgde op de massale protesten in januari waartoe kroonprins Reza Pahlavi opriep tot landelijke protesten, waarbij tienduizenden het leven lieten.\n\nWij accepteren geen woorden meer. Geef het regime een ultimatum: stop de executies nú, of Nederland sluit de ambassade, zet alle diplomaten uit en bevriest direct alle IRGC-tegoeden.\n\nMet vriendelijke groet,\n[USER]\n[CITY]",
+            "Version 3": "Geachte [NAME],\n\nDe huidige executiegolf in Iran is een brute aanval op de menselijke waardigheid. Terwijl Iraniërs al 40 dagen geen internettoegang hebben, voert het regime een psychologische oorlog door dagelijks demonstranten te vermoorden. Dit is de voortzetting van het bloedbad van januari, dat begon nadat kroonprins Reza Pahlavi opriep tot landelijke protesten.\n\nNederland moet een grens trekken. Wij eisen een ultimatum: bij de volgende executie van een demonstrant moet de ambassade van de Islamitische Republiek direct worden gesloten en de diplomaten worden uitgezet. Bevries daarnaast onmiddellijk alle bezittingen van de IRGC.\n\nMet vriendelijke groet,\n[USER]\n[CITY]",
+            "Version 4": "Geachte [NAME],\n\nHet Iraanse regime gebruikt executies als een wapen om de bevolking, die al 40 dagen in een internet-blackout leeft, te onderdrukken. Sinds de protesten in januari na de oproep van kroonprins Reza Pahlavi tot landelijke protesten, zijn tienduizenden mensen afgeslacht. Nu worden dagelijks gevangenen vermoord.\n\nStel een keihard ultimatum: de executies moeten stoppen, anders volgt onmiddellijke sluiting van de ambassade en het bevriezen van alle IRGC-assets.\n\nMet vriendelijke groet,\n[USER]\n[CITY]",
+            "Version 5": "Geachte [NAME],\n\nTerwijl de wereld toekijkt, vermoordt de Islamitische Republiek dagelijks demonstranten om de macht te behouden. Na het bloedbad van januari, volgend op de protesten waartoe kroonprins Reza Pahlavi opriep tot landelijke protesten, voert het regime nu een oorlog achter een 40-daagse internetblokkade.\n\nWij vragen u om een ultimatum. Als de executies aanhouden, moet Nederland de ambassade sluiten en de IRGC financieel lamleggen door al hun tegoeden te bevriezen.\n\nMet vriendelijke groet,\n[USER]\n[CITY]"
+        },
+        translations: {
+            "Version 1": "Dear [NAME],\n\nThe Islamic Republic is currently waging a psychological war against Iranian citizens, both inside and outside Iran. While the country has been completely cut off from the internet for 40 days, thousands of detained protesters are being executed. This follows the January massacre, where tens of thousands were murdered following the call from Crown Prince Reza Pahlavi to nationwide protests.\n\nVague diplomacy is failing. We urge you to demand a direct ultimatum from the government: if the executions of protesters do not stop immediately, the Netherlands must close the Islamic Republic embassy, expel their diplomats, and freeze all IRGC assets.\n\nKind regards,\n[USER]\n[CITY]",
+            "Version 2": "Dear [NAME],\n\nWith the internet blackout now lasting 40 days, the Islamic Republic is attempting to hide its crimes against humanity. Every day, young protesters are executed as part of a campaign of terror. This followed the massive protests in January called for by Crown Prince Reza Pahlavi to nationwide protests, where tens of thousands lost their lives.\n\nWe no longer accept words. Give the regime an ultimatum: stop the executions now, or the Netherlands will close the embassy, expel all diplomats, and immediately freeze all IRGC assets.\n\nKind regards,\n[USER]\n[CITY]",
+            "Version 3": "Dear [NAME],\n\nThe current wave of executions in Iran is a brutal assault on human dignity. While Iranians have been without internet for 40 days, the regime is waging psychological warfare by killing protesters daily. This is a continuation of the January massacre, which began after Crown Prince Reza Pahlavi called for nationwide protests.\n\nThe Netherlands must draw a line. We demand an ultimatum: upon the next execution of a protester, the Islamic Republic embassy must be closed immediately and diplomats expelled. Furthermore, freeze all IRGC assets without delay.\n\nKind regards,\n[USER]\n[CITY]",
+            "Version 4": "Dear [NAME],\n\nThe Iranian regime uses executions as a weapon to suppress the population, which has been living in an internet blackout for 40 days. Since the January protests following the call by Crown Prince Reza Pahlavi to nationwide protests, tens of thousands have been slaughtered. Now, prisoners are murdered daily.\n\nSet a harsh ultimatum: the executions must stop, or immediate closure of the embassy and freezing of all IRGC assets will follow.\n\nKind regards,\n[USER]\n[CITY]",
+            "Version 5": "Dear [NAME],\n\nWhile the world watches, the Islamic Republic murders protesters daily in a desperate attempt to cling to power. Following the January massacre, following the protests called for by Crown Prince Reza Pahlavi to nationwide protests, the regime is now waging warfare behind a 40-day internet blockade.\n\nWe ask you to demand an ultimatum. If executions continue, the Netherlands must close the embassy and financially paralyze the IRGC by freezing all their assets.\n\nKind regards,\n[USER]\n[CITY]"
+        }
+    }
+};
+
+const polDrop = document.getElementById("politician");
+Object.keys(politicians).forEach(p => { let o = document.createElement("option"); o.text = p; polDrop.add(o); });
+
+function updateUiForTopic() {
+    const topic = document.getElementById("topic").value;
+    const verDrop = document.getElementById("version");
+    verDrop.innerHTML = "";
+    Object.keys(campaignData[topic].subjects).forEach(v => {
+        let o = document.createElement("option"); o.text = v; verDrop.add(o);
+    });
+    updateChart();
+}
+
+async function recordAction(type) {
+    const topic = document.getElementById("topic").value;
+    try {
+        await supabaseClient.from('email_stats').insert([{ 
+            politician_name: polDrop.value, 
+            version_name: document.getElementById("version").value, 
+            action_type: type,
+            topic: topic 
+        }]);
+        updateChart();
+    } catch (e) { console.error(e); }
+}
+
+function triggerMailto(url) {
+    window.location.href = url;
+}
+
+function generateEmail() {
+    const topic = document.getElementById("topic").value;
+    const vKey = document.getElementById("version").value;
+    const pKey = polDrop.value;
+    const pName = pKey.split(' (')[0];
+    const rawName = document.getElementById("username").value.trim();
+    const cityVal = document.getElementById("city").value.trim();
+
+    const finalUserDutch = rawName || "Een Iraanse inwoner in Nederland";
+    const finalUserEnglish = rawName || "An Iranian resident in the Netherlands";
+
+    let body = campaignData[topic].bodies[vKey];
+    body = body.replace(/\[NAME\]/g, pName).replace(/\[USER\]/g, finalUserDutch).replace(/\[CITY\]/g, cityVal);
+
+    let trans = campaignData[topic].translations[vKey];
+    trans = trans.replace(/\[NAME\]/g, pName).replace(/\[USER\]/g, finalUserEnglish).replace(/\[CITY\]/g, cityVal);
+
+    document.getElementById("recipient").value = politicians[pKey].join("; ");
+    document.getElementById("subject").value = campaignData[topic].subjects[vKey];
+    document.getElementById("output").value = body;
+    
+    document.getElementById("translation-area").style.display = "block";
+    document.getElementById("trans-subject").innerText = campaignData[topic].subjectsTrans[vKey];
+    document.getElementById("translation-text").innerText = trans;
+
+    alert("Generated! Now click Open Email or Copy.");
+}
+
+function openMail(mode) {
+    const sub = document.getElementById("subject").value;
+    if (!sub) return alert("Please generate content first!");
+    
+    const pKey = polDrop.value;
+    const allEmails = politicians[pKey];
+    
+    // 1. Identify the primary recipient
+    const to = allEmails[0];
+    
+    // 2. Determine separator based on mode or device (Original Logic)
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const separator = (mode === 'mobile' || isMobile) ? "," : ";";
+    
+    // 3. Join the rest for CC
+    const cc = allEmails.slice(1).join(separator);
+    const body = document.getElementById("output").value;
+
+    // 4. Construct the URL using the ORIGINAL "Double-To" logic:
+    // mailto:email?to=email&cc=...
+    const mailtoUrl = `mailto:${encodeURIComponent(to)}?to=${encodeURIComponent(to)}&cc=${encodeURIComponent(cc)}&subject=${encodeURIComponent(sub)}&body=${encodeURIComponent(body)}`;
+    
+    window.location.href = mailtoUrl;
+    recordAction(mode === 'mobile' ? 'Mobile Click' : 'Web Click');
+}
+
+function copyAll() {
+    const s = document.getElementById("subject").value;
+    if (!s) return alert("Generate content first!");
+    navigator.clipboard.writeText(`To: ${document.getElementById("recipient").value}\nSubject: ${s}\n\n${document.getElementById("output").value}`);
+    recordAction('Copy All');
+    alert("Copied to clipboard!");
+}
+
+let myChart;
+async function updateChart() {
+    const topic = document.getElementById("topic").value;
+    try {
+        const { data } = await supabaseClient.from('email_stats').select('politician_name, version_name').eq('topic', topic);
+        const labels = Object.keys(politicians);
+        const versions = Object.keys(campaignData[topic].subjects);
+        const colors = ['#2b6cb0', '#4299e1', '#63b3ed', '#90cdf4', '#bee3f8'];
+        const datasets = versions.map((v, i) => ({
+            label: v,
+            data: labels.map(p => data ? data.filter(r => r.politician_name === p && r.version_name === v).length : 0),
+            backgroundColor: colors[i]
+        }));
+        const ctx = document.getElementById('statsChart').getContext('2d');
+        if (myChart) myChart.destroy();
+        myChart = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: labels.map(l => l.split(' (')[0]), datasets: datasets },
+            options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } } }
+        });
+    } catch (e) { console.error(e); }
+}
+
+window.onload = updateUiForTopic;
+</script>
+</body>
+</html>
