@@ -222,7 +222,7 @@ const polDrop = document.getElementById("politician");
 Object.keys(politicians).forEach(p => { let o = document.createElement("option"); o.text = p; polDrop.add(o); });
 
 function updateUiForTopic() {
-    const topic = document.getElementById("topic").value;
+    const topic = "executions";
     const verDrop = document.getElementById("version");
     verDrop.innerHTML = "";
     Object.keys(campaignData[topic].subjects).forEach(v => {
@@ -232,7 +232,7 @@ function updateUiForTopic() {
 }
 
 async function recordAction(type) {
-    const topic = document.getElementById("topic").value;
+    const topic = "executions";
     try {
         await supabaseClient.from('email_stats').insert([{ 
             politician_name: polDrop.value, 
@@ -249,7 +249,7 @@ function triggerMailto(url) {
 }
 
 function generateEmail() {
-    const topic = document.getElementById("topic").value;
+    const topic = "executions";
     const vKey = document.getElementById("version").value;
     const pKey = polDrop.value;
     const pName = pKey.split(' (')[0];
@@ -312,7 +312,7 @@ function copyAll() {
 
 let myChart;
 async function updateChart() {
-    const topic = document.getElementById("topic").value;
+    const topic = "executions";
     try {
         const { data } = await supabaseClient.from('email_stats').select('politician_name, version_name').eq('topic', topic);
         const labels = Object.keys(politicians);
