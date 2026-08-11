@@ -32,7 +32,7 @@
       get the new file instead of a cached copy. This trick only works for this
       one file — see "My change isn't showing up" in README.md for JavaScript.
     -->
-    <link rel="stylesheet" href="assets/css/styles.css?v=8">
+    <link rel="stylesheet" href="assets/css/styles.css?v=9">
 </head>
 
 <body>
@@ -54,9 +54,9 @@
             <div class="instructions__steps">
                 1. Enter Name/City.<br>
                 2. Select Politician &amp; Email Version.<br>
-                3. Click <b>Generate Content</b>.<br>
-                4. Click <b>Mobile</b> or <b>Web</b>.<br>
-                <b class="instructions__warning">⚠️ Mobile: Use Gmail (Outlook Mobile has bugs).</b>
+                3. Click <b>Generate Email Content</b>.<br>
+                4. Click <b>Open Email</b> and choose your email service.<br>
+                <b class="instructions__warning">⚠️ On mobile, Gmail works best (Outlook Mobile has bugs).</b>
             </div>
             <p class="instructions__note">
                 ℹ️ You can see the <b>English translation</b> of the Dutch email in the preview box below.
@@ -73,9 +73,9 @@
             <div class="instructions__steps">
                 ۱. نام و شهر خود را وارد کنید.<br>
                 ۲. سیاستمدار و نسخه را انتخاب کنید.<br>
-                ۳. دکمه <b>Generate Content</b> را بزنید.<br>
-                ۴. روی <b>Mobile</b> یا <b>Web</b> کلیک کنید.<br>
-                <b class="instructions__warning">⚠️ در موبایل حتما از برنامه Gmail استفاده کنید.</b>
+                ۳. دکمه <b>Generate Email Content</b> را بزنید.<br>
+                ۴. روی <b>Open Email</b> بزنید و سرویس ایمیل خود را انتخاب کنید.<br>
+                <b class="instructions__warning">⚠️ در موبایل، Gmail بهتر کار می‌کند (اپ Outlook موبایل ایراد دارد).</b>
             </div>
             <p class="instructions__note">
                 ℹ️ شما می‌توانید <b>ترجمه انگلیسی</b> متن ایمیل هلندی را در پایین همان بخش مشاهده کنید.
@@ -129,11 +129,25 @@
 
     <!-- Step 4: send. Enabled once content has been generated. -->
     <div class="actions">
-        <div class="actions__row">
-            <button type="button" id="open-web" class="btn-web">1. Open Email (PC/Outlook)</button>
-            <button type="button" id="open-mobile" class="btn-mobile">2. Open Email (Mobile/Gmail)</button>
+        <button type="button" id="open-email" class="btn-send"
+                aria-expanded="false" aria-controls="mail-choices">1. Open Email</button>
+
+        <!-- Revealed by the button above. Three ways to send, because a
+             mailto: link does nothing on a computer with no mail program. -->
+        <div id="mail-choices" class="choices" hidden>
+            <p class="choices__question">Where do you read your email?</p>
+            <div class="choices__row">
+                <button type="button" id="open-gmail" class="btn-choice">Gmail</button>
+                <button type="button" id="open-outlook" class="btn-choice">Outlook</button>
+                <button type="button" id="open-device" class="btn-choice">My mail app</button>
+            </div>
+            <p class="choices__note">
+                Gmail and Outlook open in a new tab and always work.
+                <b>My mail app</b> needs a mail program installed on this device.
+            </p>
         </div>
-        <button type="button" id="copy-all" class="btn-copy">3. Copy All to Clipboard</button>
+
+        <button type="button" id="copy-all" class="btn-copy">2. Copy All to Clipboard</button>
     </div>
 
     <p id="status" class="status" role="status" aria-live="polite" hidden></p>

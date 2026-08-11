@@ -303,7 +303,7 @@ button {
 /* Disabled buttons get flat, muted colours instead of fading with opacity.
    Opacity would blend the gold fill with the dark page behind it into a
    muddy brown — that trick only works over a light background. This rule
-   wins over .btn-web/.btn-mobile/.btn-copy's own colours without needing
+   wins over .btn-send/.btn-choice/.btn-copy's own colours without needing
    !important, because :disabled makes it more specific than a plain class. */
 button:disabled {
   cursor: not-allowed;
@@ -324,15 +324,23 @@ textarea:focus-visible {
 
 /* Gold marks every main action: generating the email and sending it. */
 .btn-generate,
-.btn-web,
-.btn-mobile {
+.btn-send {
   background: var(--color-brand);
   color: var(--color-bg);
 }
 
-.btn-web,
-.btn-mobile {
+.btn-send {
   height: 50px;
+}
+
+/* The three email services, shown after "Open Email" is pressed. Outlined
+   rather than filled, so the gold "Open Email" button stays the main thing
+   on the page and these read as a follow-up question. */
+.btn-choice {
+  background: transparent;
+  color: var(--color-brand);
+  border: 1px solid var(--color-brand);
+  margin: 0;
 }
 
 .btn-copy {
@@ -380,6 +388,34 @@ textarea:focus-visible {
 .actions__row {
   display: flex;
   gap: 10px;
+}
+
+/* The "where do you read your email?" panel. Hidden until Open Email is
+   pressed; the hidden attribute on the div does the hiding. */
+.choices {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 14px 16px 16px;
+}
+
+.choices__question {
+  margin: 0 0 10px;
+  color: var(--color-brand);
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.choices__row {
+  display: flex;
+  gap: 10px;
+}
+
+.choices__note {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
 }
 
 /* 8. Status messages ----------------------------------------------------- */
@@ -434,9 +470,10 @@ textarea:focus-visible {
   text-align: center;
 }
 
-/* Stack the two action buttons on narrow phones. */
+/* Stack the action buttons and the email-service choices on narrow phones. */
 @media (max-width: 480px) {
-  .actions__row {
+  .actions__row,
+  .choices__row {
     flex-direction: column;
   }
 }

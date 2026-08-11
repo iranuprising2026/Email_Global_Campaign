@@ -25,10 +25,19 @@ function createSupabaseClient() {
 
 const client = createSupabaseClient();
 
-/** Human-readable labels stored in the `action_type` column. */
+/**
+ * Human-readable labels stored in the `action_type` column. The keys match the
+ * mail services in email.js, so app.js can look one up directly.
+ *
+ * Renaming these is safe for the chart: fetchActions below reads only
+ * politician_name and version_name, so the chart counts every row whatever its
+ * action_type. Rows written before 2026-08-11 carry the older labels
+ * "Web Click" and "Mobile Click", from when the page had two send buttons.
+ */
 export const ACTIONS = {
-  web: 'Web Click',
-  mobile: 'Mobile Click',
+  gmail: 'Gmail',
+  outlook: 'Outlook',
+  device: 'Mail App',
   copy: 'Copy All',
 };
 

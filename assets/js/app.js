@@ -9,7 +9,7 @@
 import { ACTIVE_CAMPAIGN_ID } from './config.js';
 import { getCampaign } from './data/campaign.js';
 import { politicians, politicianLabel, findPoliticianByLabel } from './data/politicians.js';
-import { buildEmail, buildMailtoUrl, formatForClipboard } from './email.js';
+import { buildEmail, buildComposeUrl, formatForClipboard, MAIL_SERVICES } from './email.js';
 import { recordAction, ACTIONS } from './stats.js';
 import { renderTracker } from './tracker.js';
 
@@ -28,8 +28,11 @@ const el = {
   translationArea: document.getElementById('translation-area'),
   transSubject: document.getElementById('trans-subject'),
   transBody: document.getElementById('trans-body'),
-  openWeb: document.getElementById('open-web'),
-  openMobile: document.getElementById('open-mobile'),
+  openEmail: document.getElementById('open-email'),
+  mailChoices: document.getElementById('mail-choices'),
+  openGmail: document.getElementById('open-gmail'),
+  openOutlook: document.getElementById('open-outlook'),
+  openDevice: document.getElementById('open-device'),
   copyAll: document.getElementById('copy-all'),
   status: document.getElementById('status'),
   chart: document.getElementById('stats-chart'),
@@ -82,9 +85,15 @@ function invalidatePreview() {
 }
 
 function setActionsEnabled(enabled) {
-  el.openWeb.disabled = !enabled;
-  el.openMobile.disabled = !enabled;
+  el.openEmail.disabled = !enabled;
   el.copyAll.disabled = !enabled;
+  if (!enabled) showMailChoices(false);
+}
+
+/** Show or hide the Gmail / Outlook / mail-app choices. */
+function showMailChoices(open) {
+  el.mailChoices.hidden = !open;
+  el.openEmail.setAttribute('aria-expanded', String(open));
 }
 
 function generate() {
@@ -117,28 +126,44 @@ function generate() {
   );
 }
 
-async function openMail(mode) {
+async function openMail(service) {
   if (!currentEmail) {
     showStatus('Please press "Generate Email Content" first.', 'error');
     return;
   }
 
   const politician = findPoliticianByLabel(el.politician.value);
-  const url = buildMailtoUrl({
+  const { url, newTab } = buildComposeUrl({
     politician,
     subject: currentEmail.subject.nl,
     body: currentEmail.body.nl,
-    mode,
+    service,
     userAgent: navigator.userAgent,
   });
 
-  // Open the mail app first; counting must never delay the actual send.
-  window.location.href = url;
+  // Open the email first; counting must never delay the actual send.
+  // Gmail and Outlook get a new tab so the visitor keeps this page. A mailto:
+  // must NOT open a tab: it hands off to the mail program and would otherwise
+  // leave an empty tab behind.
+  if (newTab) {
+    window.open(url, '_blank', 'noopener');
+  } else {
+    window.location.href = url;
+  }
+
+  // A mailto: does nothing at all when no mail program is installed, and the
+  // browser gives us no way to detect that, so say what should happen next.
+  showStatus(
+    service === 'device'
+      ? 'Opening your mail app. If nothing happened, no mail program is set up on this device — use Gmail, Outlook, or "Copy All to Clipboard" instead.'
+      : `Opening ${MAIL_SERVICES[service]} in a new tab. Check that the email looks right, then send it.`,
+    service === 'device' ? 'info' : 'success'
+  );
 
   await recordAction({
     politicianLabel: currentEmail.politicianLabel,
     versionId: el.version.value,
-    actionType: mode === 'mobile' ? ACTIONS.mobile : ACTIONS.web,
+    actionType: ACTIONS[service],
     campaignId: campaign.id,
   });
   refreshTracker();
@@ -186,8 +211,16 @@ function init() {
   setActionsEnabled(false);
 
   el.generate.addEventListener('click', generate);
-  el.openWeb.addEventListener('click', () => openMail('web'));
-  el.openMobile.addEventListener('click', () => openMail('mobile'));
+
+  // "Open Email" reveals the three choices rather than sending straight away,
+  // so the visitor can pick a service that actually works on their device.
+  el.openEmail.addEventListener('click', () => {
+    showMailChoices(el.mailChoices.hidden);
+  });
+
+  el.openGmail.addEventListener('click', () => openMail('gmail'));
+  el.openOutlook.addEventListener('click', () => openMail('outlook'));
+  el.openDevice.addEventListener('click', () => openMail('device'));
   el.copyAll.addEventListener('click', copyAll);
 
   for (const input of [el.username, el.city, el.politician, el.version]) {

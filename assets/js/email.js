@@ -75,15 +75,32 @@ export function isMobileUserAgent(userAgent) {
 }
 
 /**
- * Build the mailto: link that opens the visitor's mail app.
+ * Where the visitor reads their email. These keys are what the buttons pass
+ * to buildComposeUrl(); the values are shown to the visitor.
+ */
+export const MAIL_SERVICES = {
+  gmail: 'Gmail',
+  outlook: 'Outlook',
+  device: 'My mail app',
+};
+
+/**
+ * Build the mailto: link that opens the visitor's own mail program.
+ *
+ * IMPORTANT: this only does anything if the device actually has a mail program
+ * registered to handle mailto: links. Phones always do. A PC where the owner
+ * reads mail in a browser tab often does NOT, and there the link fails
+ * silently -- nothing happens at all, with no error. That is why the page also
+ * offers Gmail and Outlook web links; see buildComposeUrl below.
  *
  * Two deliberate quirks, both discovered the hard way -- please do not
  * "tidy" them away without testing on real devices first:
  *
  * 1. SEPARATORS. RFC 6068 says commas, but desktop Outlook only accepts
- *    semicolons, while Gmail on mobile only accepts commas. So the separator
- *    depends on which button was pressed, and any mobile device gets commas
- *    regardless of the button.
+ *    semicolons, while Gmail on mobile only accepts commas. The device decides:
+ *    phones and tablets get commas, everything else gets semicolons. This used
+ *    to depend on which of two buttons was pressed, which asked the visitor to
+ *    know something they cannot be expected to know.
  *
  * 2. THE ADDRESS APPEARS TWICE. Once in the mailto: path and again as a `to=`
  *    parameter. Some mail clients drop the path address as soon as other
@@ -94,11 +111,10 @@ export function isMobileUserAgent(userAgent) {
  * @param {object} args.politician An entry from data/politicians.js
  * @param {string} args.subject    Dutch subject line
  * @param {string} args.body       Dutch email body
- * @param {'web'|'mobile'} args.mode Which button the visitor pressed
  * @param {string} args.userAgent  navigator.userAgent
  */
-export function buildMailtoUrl({ politician, subject, body, mode, userAgent }) {
-  const separator = mode === 'mobile' || isMobileUserAgent(userAgent) ? ',' : ';';
+export function buildMailtoUrl({ politician, subject, body, userAgent }) {
+  const separator = isMobileUserAgent(userAgent) ? ',' : ';';
   const to = politician.primary;
   const cc = politician.cc.join(separator);
 
@@ -113,6 +129,58 @@ export function buildMailtoUrl({ politician, subject, body, mode, userAgent }) {
     `&subject=${encodeURIComponent(subject)}` +
     `&body=${encodeURIComponent(body)}`
   );
+}
+
+/**
+ * Build the link that opens a pre-filled email, for whichever service the
+ * visitor picked.
+ *
+ * Gmail and Outlook open a compose window in a normal browser tab, so they
+ * work on any computer even when no mail program is installed. Both accept
+ * comma-separated CC addresses.
+ *
+ * @param {object} args
+ * @param {object} args.politician An entry from data/politicians.js
+ * @param {string} args.subject    Dutch subject line
+ * @param {string} args.body       Dutch email body
+ * @param {'gmail'|'outlook'|'device'} args.service Which option was chosen
+ * @param {string} args.userAgent  navigator.userAgent
+ * @returns {{url: string, newTab: boolean}} newTab false means "do not
+ *          navigate away from the page" -- mailto: must not open a tab.
+ */
+export function buildComposeUrl({ politician, subject, body, service, userAgent }) {
+  if (service === 'device') {
+    return { url: buildMailtoUrl({ politician, subject, body, userAgent }), newTab: false };
+  }
+
+  const to = politician.primary;
+  const cc = politician.cc.join(',');
+
+  if (service === 'gmail') {
+    return {
+      url:
+        'https://mail.google.com/mail/?view=cm&fs=1' +
+        `&to=${encodeURIComponent(to)}` +
+        `&cc=${encodeURIComponent(cc)}` +
+        `&su=${encodeURIComponent(subject)}` +
+        `&body=${encodeURIComponent(body)}`,
+      newTab: true,
+    };
+  }
+
+  if (service === 'outlook') {
+    return {
+      url:
+        'https://outlook.live.com/mail/0/deeplink/compose?' +
+        `to=${encodeURIComponent(to)}` +
+        `&cc=${encodeURIComponent(cc)}` +
+        `&subject=${encodeURIComponent(subject)}` +
+        `&body=${encodeURIComponent(body)}`,
+      newTab: true,
+    };
+  }
+
+  throw new Error(`Unknown mail service "${service}".`);
 }
 
 /** The plain-text block used by the "Copy All" button. */
