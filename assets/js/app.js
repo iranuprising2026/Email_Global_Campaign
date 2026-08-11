@@ -126,6 +126,31 @@ function generate() {
   );
 }
 
+/**
+ * Open a phone app link, and fall back to the website if the app is missing.
+ *
+ * An app link like googlegmail:// does nothing at all when the app is not
+ * installed, and the browser offers no way to ask. The workaround everyone
+ * uses: if the app opens, this page goes into the background and the browser
+ * fires visibilitychange. If that has not happened shortly after, assume no
+ * app and send the visitor to the website instead.
+ */
+function openAppOrFallBack(appUrl, webUrl) {
+  const timer = setTimeout(() => {
+    if (!document.hidden) window.location.href = webUrl;
+  }, 1500);
+
+  // The app opened, so this page was backgrounded — cancel the fallback,
+  // otherwise the visitor returns to find the website loaded on top.
+  const cancel = () => {
+    if (document.hidden) clearTimeout(timer);
+  };
+  document.addEventListener('visibilitychange', cancel, { once: true });
+  window.addEventListener('pagehide', () => clearTimeout(timer), { once: true });
+
+  window.location.href = appUrl;
+}
+
 async function openMail(service) {
   if (!currentEmail) {
     showStatus('Please press "Generate Email Content" first.', 'error');
@@ -133,7 +158,7 @@ async function openMail(service) {
   }
 
   const politician = findPoliticianByLabel(el.politician.value);
-  const { url, newTab } = buildComposeUrl({
+  const { url, newTab, fallbackUrl } = buildComposeUrl({
     politician,
     subject: currentEmail.subject.nl,
     body: currentEmail.body.nl,
@@ -142,11 +167,13 @@ async function openMail(service) {
   });
 
   // Open the email first; counting must never delay the actual send.
-  // Gmail and Outlook get a new tab so the visitor keeps this page. A mailto:
-  // must NOT open a tab: it hands off to the mail program and would otherwise
-  // leave an empty tab behind.
+  // A new tab is only for the desktop web links, so the visitor keeps this
+  // page. A mailto: or a phone app link must NOT open a tab: they hand off to
+  // another app and would otherwise leave an empty tab behind.
   if (newTab) {
     window.open(url, '_blank', 'noopener');
+  } else if (fallbackUrl) {
+    openAppOrFallBack(url, fallbackUrl);
   } else {
     window.location.href = url;
   }
@@ -156,7 +183,7 @@ async function openMail(service) {
   showStatus(
     service === 'device'
       ? 'Opening your mail app. If nothing happened, no mail program is set up on this device — use Gmail, Outlook, or "Copy All to Clipboard" instead.'
-      : `Opening ${MAIL_SERVICES[service]} in a new tab. Check that the email looks right, then send it.`,
+      : `Opening ${MAIL_SERVICES[service]}. Check that the email looks right, then send it.`,
     service === 'device' ? 'info' : 'success'
   );
 

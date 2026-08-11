@@ -438,6 +438,10 @@ textarea:focus-visible {
 /* 9. Tracker chart ------------------------------------------------------- */
 .tracker {
   background: var(--color-surface);
+  /* Without border-box the 20px padding is added ON TOP of width:100%, which
+     makes this card wider than the screen and scrolls the whole page
+     sideways on a phone. */
+  box-sizing: border-box;
   padding: 20px;
   border-radius: var(--radius);
   margin-top: 30px;

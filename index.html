@@ -32,7 +32,7 @@
       get the new file instead of a cached copy. This trick only works for this
       one file — see "My change isn't showing up" in README.md for JavaScript.
     -->
-    <link rel="stylesheet" href="assets/css/styles.css?v=9">
+    <link rel="stylesheet" href="assets/css/styles.css?v=10">
 </head>
 
 <body>
@@ -53,9 +53,10 @@
             <strong>Steps:</strong>
             <div class="instructions__steps">
                 1. Enter Name/City.<br>
-                2. Select Politician &amp; Email Version.<br>
-                3. Click <b>Generate Email Content</b>.<br>
-                4. Click <b>Open Email</b> and choose your email service.<br>
+                2. Choose the Politician.<br>
+                3. Choose an Email Version.<br>
+                4. Click <b>Generate Email Content</b>.<br>
+                5. Click <b>Open Email</b> and pick your email service.<br>
                 <b class="instructions__warning">⚠️ On mobile, Gmail works best (Outlook Mobile has bugs).</b>
             </div>
             <p class="instructions__note">
@@ -72,9 +73,10 @@
             <strong>مراحل:</strong>
             <div class="instructions__steps">
                 ۱. نام و شهر خود را وارد کنید.<br>
-                ۲. سیاستمدار و نسخه را انتخاب کنید.<br>
-                ۳. دکمه <b>Generate Email Content</b> را بزنید.<br>
-                ۴. روی <b>Open Email</b> بزنید و سرویس ایمیل خود را انتخاب کنید.<br>
+                ۲. سیاستمدار را انتخاب کنید.<br>
+                ۳. نسخه ایمیل را انتخاب کنید.<br>
+                ۴. دکمه <b>Generate Email Content</b> را بزنید.<br>
+                ۵. روی <b>Open Email</b> بزنید و سرویس ایمیل خود را انتخاب کنید.<br>
                 <b class="instructions__warning">⚠️ در موبایل، Gmail بهتر کار می‌کند (اپ Outlook موبایل ایراد دارد).</b>
             </div>
             <p class="instructions__note">
@@ -103,7 +105,7 @@
         <label class="field-label" for="version">3. Choose an Email Version randomly (1 to 5):</label>
         <select id="version"></select>
 
-        <button type="button" id="generate" class="btn-generate">Generate Email Content</button>
+        <button type="button" id="generate" class="btn-generate">4. Generate Email Content</button>
     </section>
 
     <hr class="divider">
@@ -127,10 +129,10 @@
         </div>
     </section>
 
-    <!-- Step 4: send. Enabled once content has been generated. -->
+    <!-- Step 5: send. Enabled once content has been generated. -->
     <div class="actions">
         <button type="button" id="open-email" class="btn-send"
-                aria-expanded="false" aria-controls="mail-choices">1. Open Email</button>
+                aria-expanded="false" aria-controls="mail-choices">5. Open Email</button>
 
         <!-- Revealed by the button above. Three ways to send, because a
              mailto: link does nothing on a computer with no mail program. -->
@@ -142,12 +144,15 @@
                 <button type="button" id="open-device" class="btn-choice">My mail app</button>
             </div>
             <p class="choices__note">
-                Gmail and Outlook open in a new tab and always work.
-                <b>My mail app</b> needs a mail program installed on this device.
+                Gmail and Outlook open the app on a phone, or a new browser tab
+                on a computer. <b>My mail app</b> needs a mail program already
+                set up on this device.
             </p>
         </div>
 
-        <button type="button" id="copy-all" class="btn-copy">2. Copy All to Clipboard</button>
+        <!-- Deliberately unnumbered: this is an alternative to step 5, not a
+             step after it. -->
+        <button type="button" id="copy-all" class="btn-copy">Or copy the email and paste it yourself</button>
     </div>
 
     <p id="status" class="status" role="status" aria-live="polite" hidden></p>

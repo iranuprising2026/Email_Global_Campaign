@@ -145,39 +145,59 @@ export function buildMailtoUrl({ politician, subject, body, userAgent }) {
  * @param {string} args.body       Dutch email body
  * @param {'gmail'|'outlook'|'device'} args.service Which option was chosen
  * @param {string} args.userAgent  navigator.userAgent
- * @returns {{url: string, newTab: boolean}} newTab false means "do not
- *          navigate away from the page" -- mailto: must not open a tab.
+ * @returns {{url: string, newTab: boolean, fallbackUrl: string|null}}
+ *          newTab false means "do not navigate away from the page" -- a
+ *          mailto: or an app link must not open a tab.
+ *          fallbackUrl is set only on phones, where `url` is an app link that
+ *          silently does nothing when the app is not installed. See app.js.
  */
 export function buildComposeUrl({ politician, subject, body, service, userAgent }) {
   if (service === 'device') {
-    return { url: buildMailtoUrl({ politician, subject, body, userAgent }), newTab: false };
+    return {
+      url: buildMailtoUrl({ politician, subject, body, userAgent }),
+      newTab: false,
+      fallbackUrl: null,
+    };
   }
 
+  const onPhone = isMobileUserAgent(userAgent);
   const to = politician.primary;
   const cc = politician.cc.join(',');
+  const q = {
+    to: encodeURIComponent(to),
+    cc: encodeURIComponent(cc),
+    subject: encodeURIComponent(subject),
+    body: encodeURIComponent(body),
+  };
 
   if (service === 'gmail') {
-    return {
-      url:
-        'https://mail.google.com/mail/?view=cm&fs=1' +
-        `&to=${encodeURIComponent(to)}` +
-        `&cc=${encodeURIComponent(cc)}` +
-        `&su=${encodeURIComponent(subject)}` +
-        `&body=${encodeURIComponent(body)}`,
-      newTab: true,
-    };
+    const web =
+      'https://mail.google.com/mail/?view=cm&fs=1' +
+      `&to=${q.to}&cc=${q.cc}&su=${q.subject}&body=${q.body}`;
+    // On a phone the https link opens the Gmail *website*, not the app --
+    // Gmail's universal-link handling does not cover the compose URL. The
+    // app's own scheme does open it. Note the three slashes: that is what
+    // the Gmail app registers, not a typo.
+    return onPhone
+      ? {
+          url: `googlegmail:///co?to=${q.to}&cc=${q.cc}&subject=${q.subject}&body=${q.body}`,
+          newTab: false,
+          fallbackUrl: web,
+        }
+      : { url: web, newTab: true, fallbackUrl: null };
   }
 
   if (service === 'outlook') {
-    return {
-      url:
-        'https://outlook.live.com/mail/0/deeplink/compose?' +
-        `to=${encodeURIComponent(to)}` +
-        `&cc=${encodeURIComponent(cc)}` +
-        `&subject=${encodeURIComponent(subject)}` +
-        `&body=${encodeURIComponent(body)}`,
-      newTab: true,
-    };
+    const web =
+      'https://outlook.live.com/mail/0/deeplink/compose?' +
+      `to=${q.to}&cc=${q.cc}&subject=${q.subject}&body=${q.body}`;
+    return onPhone
+      ? {
+          url: `ms-outlook://compose?to=${q.to}&cc=${q.cc}&subject=${q.subject}&body=${q.body}`,
+          newTab: false,
+          fallbackUrl: web,
+        }
+      : { url: web, newTab: true, fallbackUrl: null };
   }
 
   throw new Error(`Unknown mail service "${service}".`);
