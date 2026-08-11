@@ -1,0 +1,29 @@
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Operating systems
+.DS_Store
+.DS_Store?
+Thumbs.db
+desktop.ini
+._*
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+
+# Secrets — this site needs no secret keys. If you ever add a file holding a
+# service_role key or an API token, keep it out of the repository.
+.env
+.env.*
+!.env.example
+
+# Claude Code personal settings and the local command log. Machine-specific and
+# personal, so they stay out of the repository. Shared Claude guidance lives in
+# the committed CLAUDE.md instead.
+.claude/settings.local.json
+.claude/command-log.txt
