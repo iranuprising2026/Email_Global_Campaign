@@ -24,7 +24,10 @@ create table if not exists public.email_stats (
     -- assets/js/data/campaign.js
     version_name    text not null,
 
-    -- 'Web Click' | 'Mobile Click' | 'Copy All' — see ACTIONS in stats.js
+    -- 'Gmail' | 'Outlook' | 'Mail App' | 'Copy All' — see ACTIONS in stats.js.
+    -- Rows written before 2026-08-11 use the older 'Web Click' / 'Mobile Click',
+    -- from when the page had two send buttons. The chart does not read this
+    -- column, so the old values are harmless.
     action_type     text not null,
 
     -- Campaign id, e.g. 'executions'. Keeps campaigns' counts separate.

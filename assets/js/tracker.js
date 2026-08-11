@@ -1,10 +1,19 @@
 /**
  * The "Live Action Tracker" chart.
  *
- * A stacked bar per politician, split by email version. Its purpose is
- * practical: supporters use it to spot which politicians have been contacted
- * least, so the pressure spreads across parliament instead of piling onto the
- * same few inboxes.
+ * Its whole purpose is practical: show which politicians have been contacted
+ * LEAST, so supporters spread the pressure across parliament instead of piling
+ * onto the same few inboxes.
+ *
+ * That purpose drives two design choices:
+ *
+ *  1. Bars are sorted with the least-contacted at the TOP, so the people who
+ *     need attention are the first thing you see. Do not sort by name.
+ *  2. Bars run horizontally, because the labels are long ("Caspar Veldkamp
+ *     (NSC)") and vertical bars force them to be rotated and hard to read.
+ *
+ * Every politician in the list is from a different party, so one bar per
+ * politician is also one bar per party.
  */
 
 import { politicians, politicianLabel } from './data/politicians.js';
@@ -30,24 +39,53 @@ function token(name) {
 
 let chart = null;
 
-/** Count actions per politician per version. */
+/**
+ * Count actions per politician per version, and order politicians so the
+ * least-contacted comes first.
+ *
+ * @returns {{labels: string[], datasets: object[], total: number}}
+ */
 function tallyActions(actions, campaign) {
-  return campaign.versions.map((version, index) => ({
-    label: version.id,
-    backgroundColor: VERSION_COLORS[index % VERSION_COLORS.length],
-    /* A thin dark line between stacked blocks, so neighbouring shades stay
-       separate even though they are close in brightness. */
-    borderColor: token('--color-bg'),
-    borderWidth: 1,
-    data: politicians.map(
-      (politician) =>
+  // How many actions each politician received, per version and in total.
+  const rows = politicians.map((politician) => {
+    const label = politicianLabel(politician);
+    const perVersion = campaign.versions.map(
+      (version) =>
         actions.filter(
           (row) =>
-            row.politician_name === politicianLabel(politician) &&
-            row.version_name === version.id
+            row.politician_name === label && row.version_name === version.id
         ).length
-    ),
-  }));
+    );
+    return {
+      label,
+      perVersion,
+      total: perVersion.reduce((sum, n) => sum + n, 0),
+    };
+  });
+
+  // Least contacted first. Ties keep the original list order, which is stable
+  // in every browser that matters, so the chart does not jitter on refresh.
+  rows.sort((a, b) => a.total - b.total);
+
+  return {
+    labels: rows.map((r) => r.label),
+    total: rows.reduce((sum, r) => sum + r.total, 0),
+    datasets: campaign.versions.map((version, index) => ({
+      label: version.id,
+      data: rows.map((r) => r.perVersion[index]),
+      backgroundColor: VERSION_COLORS[index % VERSION_COLORS.length],
+      /* A thin dark line between stacked blocks, so neighbouring shades stay
+         separate even though they are close in brightness. */
+      borderColor: token('--color-bg'),
+      borderWidth: 1,
+    })),
+  };
+}
+
+/** Show a message in place of the chart. */
+function showNote(noteElement, message) {
+  noteElement.textContent = message;
+  noteElement.hidden = false;
 }
 
 /**
@@ -61,31 +99,43 @@ export async function renderTracker(campaign, canvas, noteElement) {
   const actions = await fetchActions(campaign.id);
 
   if (actions === null) {
-    noteElement.textContent =
-      'The action tracker could not be loaded right now. You can still send your email.';
-    noteElement.hidden = false;
+    showNote(
+      noteElement,
+      'The action tracker could not be loaded right now. You can still send your email.'
+    );
     return;
   }
-
-  noteElement.hidden = true;
 
   if (!window.Chart) {
-    noteElement.textContent = 'The chart library could not be loaded.';
-    noteElement.hidden = false;
+    showNote(noteElement, 'The chart library could not be loaded.');
     return;
   }
 
-  const datasets = tallyActions(actions, campaign);
+  const { labels, datasets, total } = tallyActions(actions, campaign);
+
+  // A brand-new campaign has no rows yet. An empty chart looks broken, so say
+  // what is actually going on.
+  if (total === 0) {
+    showNote(
+      noteElement,
+      'No emails have been recorded yet for this campaign. Send the first one!'
+    );
+  } else {
+    noteElement.hidden = true;
+  }
+
+  const textMuted = token('--color-text-muted');
+  const gridColor = token('--color-border');
 
   // Chart.js cannot update a chart whose data shape changed, so replace it.
   chart?.destroy();
   chart = new window.Chart(canvas.getContext('2d'), {
     type: 'bar',
-    data: {
-      labels: politicians.map((p) => p.name),
-      datasets,
-    },
+    data: { labels, datasets },
     options: {
+      // Horizontal bars: the politician names are too long to fit under
+      // vertical ones without being rotated.
+      indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
       /* Chart.js defaults to dark grey text and near-black grid lines, both
@@ -93,23 +143,30 @@ export async function renderTracker(campaign, canvas, noteElement) {
       scales: {
         x: {
           stacked: true,
-          ticks: { color: token('--color-text-muted') },
-          grid: { color: token('--color-border') },
+          beginAtZero: true,
+          ticks: { precision: 0, color: textMuted },
+          grid: { color: gridColor },
+          title: {
+            display: true,
+            text: 'Emails sent',
+            color: textMuted,
+          },
         },
         y: {
           stacked: true,
-          beginAtZero: true,
-          ticks: { precision: 0, color: token('--color-text-muted') },
-          grid: { color: token('--color-border') },
+          ticks: { color: textMuted },
+          grid: { display: false },
         },
       },
       plugins: {
         legend: { labels: { color: token('--color-text') } },
         tooltip: {
           callbacks: {
-            title: (items) => {
-              const politician = politicians[items[0].dataIndex];
-              return politicianLabel(politician);
+            // Show the running total for the politician, which is the number
+            // supporters actually care about when choosing who to write to.
+            footer: (items) => {
+              const sum = items.reduce((n, item) => n + item.parsed.x, 0);
+              return `Total: ${sum}`;
             },
           },
         },
