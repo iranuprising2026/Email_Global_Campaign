@@ -6,64 +6,171 @@
  * filling, mailto quirks) easy to reason about and to test.
  */
 
-import { ANONYMOUS_SIGNATURE } from './config.js';
-import { politicianLabel } from './data/politicians.js';
+import { politicianLabel } from './data/index.js';
 
 /**
- * Replace the [NAME] / [USER] / [CITY] placeholders.
+ * Replace one placeholder, capitalising the replacement where it starts a
+ * sentence.
+ *
+ * This exists for [COUNTRY]. In English the term is "the Netherlands", but two
+ * of the letters open a sentence with it, where it has to read "The
+ * Netherlands". Rather than ask whoever writes the letters to think about that,
+ * the first letter is capitalised automatically when the placeholder follows
+ * the start of the text, a full stop, or a line break.
+ *
+ * Harmless in languages that always capitalise the term: Dutch "Nederland" and
+ * German "Deutschland" are unchanged by it.
+ */
+function replacePlaceholder(text, placeholder, value) {
+  const escaped = placeholder.replace(/[[\]]/g, '\\$&');
+  // Capture what precedes the placeholder so it can be put back unchanged.
+  const pattern = new RegExp(`(^|[.!?]\\s*|\\n\\s*)${escaped}`, 'g');
+  const capitalised = value.charAt(0).toUpperCase() + value.slice(1);
+
+  return text
+    .replace(pattern, (_match, before) => before + capitalised)
+    .replaceAll(placeholder, value);
+}
+
+/**
+ * Replace the placeholders in a letter.
  *
  * If the visitor left their city blank, the placeholder would leave a dangling
  * empty line under the signature, so trailing blank lines are trimmed away.
  */
-function fillTemplate(template, { politicianName, signature, city }) {
-  return template
+function fillTemplate(template, { politicianName, signature, city, terms, demands }) {
+  let text = template
     .replaceAll('[NAME]', politicianName)
     .replaceAll('[USER]', signature)
-    .replaceAll('[CITY]', city)
-    .replace(/[ \t]+$/gm, '')
-    .replace(/\s+$/, '');
+    .replaceAll('[CITY]', city);
+
+  text = replacePlaceholder(text, '[COUNTRY]', terms.country);
+  text = replacePlaceholder(text, '[GOVERNMENT]', terms.government);
+  text = replacePlaceholder(text, '[DEMANDS]', demands);
+
+  return text.replace(/[ \t]+$/gm, '').replace(/\s+$/, '');
 }
 
 /**
- * Build the ready-to-send email for one politician and one version.
+ * The measures one country's letter asks for, for one version.
+ *
+ * Country-specific because the same demand is not true everywhere: Canada
+ * closed the Islamic Republic embassy in 2012 and listed the IRGC in 2024, so
+ * asking a Canadian MP to do either reads as though nobody checked. Per version
+ * because the five letters phrase the demand differently on purpose, and the
+ * grammar around the placeholder differs -- version 4 needs a noun phrase
+ * ("including ...") where version 1 needs a full clause.
+ *
+ * Falls back to `default`, so adding a sixth version does not require editing
+ * every country file -- it just gets the country's general wording until
+ * somebody writes a specific one.
+ */
+function demandsFor(country, versionId, language) {
+  const forVersion = country.demands?.[versionId] || country.demands?.default;
+  return forVersion?.[language];
+}
+
+/**
+ * Build the ready-to-send email for one country, issue, politician and version.
+ *
+ * Two languages come back:
+ *
+ *   `sent`  the letter in the country's own language -- this is what gets
+ *           emailed to the politician.
+ *   `en`    the English translation, shown in the preview box so supporters
+ *           can read what they are about to send.
+ *
+ * For an English-speaking country the two are the same text.
  *
  * @param {object}   args
- * @param {object}   args.campaign   A campaign from data/campaign.js
+ * @param {object}   args.country    A country from data/countries/
+ * @param {object}   args.issue      An issue from data/issues/
+ * @param {string}   [args.language] Which of the country's languages to write
+ *                                   in. Defaults to its first, which is the
+ *                                   only one for every country except a
+ *                                   bilingual one like Canada.
  * @param {string}   args.versionId  e.g. "Version 3"
- * @param {object}   args.politician An entry from data/politicians.js
+ * @param {object}   args.politician An entry from the country's politicians
  * @param {string}   args.userName   Visitor's name, may be empty
  * @param {string}   args.city       Visitor's city, may be empty
- * @returns {{subject: {nl: string, en: string},
- *            body: {nl: string, en: string},
+ * @returns {{subject: {sent: string, en: string},
+ *            body: {sent: string, en: string},
+ *            language: string,
  *            recipients: string[],
  *            politicianLabel: string}}
  */
-export function buildEmail({ campaign, versionId, politician, userName = '', city = '' }) {
-  const version = campaign.versions.find((v) => v.id === versionId);
+export function buildEmail({
+  country,
+  issue,
+  language,
+  versionId,
+  politician,
+  userName = '',
+  city = '',
+}) {
+  const version = issue.versions.find((v) => v.id === versionId);
   if (!version) {
-    throw new Error(`Unknown version "${versionId}" in campaign "${campaign.id}".`);
+    throw new Error(`Unknown version "${versionId}" in issue "${issue.id}".`);
+  }
+
+  const lang = language || country.languages[0];
+  if (!country.languages.includes(lang)) {
+    throw new Error(
+      `Country "${country.id}" does not list language "${lang}". ` +
+        `Add it to \`languages\` in assets/js/data/countries/${country.id}.js.`
+    );
+  }
+  if (!version.subject[lang] || !version.body[lang]) {
+    throw new Error(
+      `Issue "${issue.id}" has no "${lang}" text for "${versionId}". ` +
+        `Add it in assets/js/data/issues/${issue.id}.js, or remove ` +
+        `"${country.id}" from assets/js/data/index.js until it is translated.`
+    );
+  }
+  if (!country.terms[lang] || !country.terms.en) {
+    throw new Error(
+      `Country "${country.id}" is missing terms for "${lang}" or "en". ` +
+        `Add them in assets/js/data/countries/${country.id}.js -- an ` +
+        `unreplaced placeholder would be emailed to a member of parliament.`
+    );
+  }
+  // Only required by letters that actually use [DEMANDS], so check the text
+  // first rather than forcing every country to carry a field it never uses.
+  const usesDemands = (version.body[lang] + version.body.en).includes('[DEMANDS]');
+  if (usesDemands && !(demandsFor(country, versionId, lang) && demandsFor(country, versionId, 'en'))) {
+    throw new Error(
+      `Country "${country.id}" has no demands for "${versionId}" in "${lang}" ` +
+        `or "en". Add them under \`demands\` in ` +
+        `assets/js/data/countries/${country.id}.js -- the letter asks for ` +
+        `specific measures and an unreplaced [DEMANDS] would be emailed to a ` +
+        `member of parliament.`
+    );
   }
 
   const trimmedName = userName.trim();
   const trimmedCity = city.trim();
 
-  const dutch = {
+  const inLanguage = (code) => ({
     politicianName: politician.name,
-    signature: trimmedName || ANONYMOUS_SIGNATURE.nl,
+    signature: trimmedName || country.anonymousSignature[code],
     city: trimmedCity,
-  };
-  const english = {
-    politicianName: politician.name,
-    signature: trimmedName || ANONYMOUS_SIGNATURE.en,
-    city: trimmedCity,
-  };
+    terms: country.terms[code],
+    demands: demandsFor(country, versionId, code),
+  });
+
+  const sent = inLanguage(lang);
+  const english = inLanguage('en');
 
   return {
-    subject: { nl: version.subject.nl, en: version.subject.en },
+    subject: {
+      sent: fillTemplate(version.subject[lang], sent),
+      en: fillTemplate(version.subject.en, english),
+    },
     body: {
-      nl: fillTemplate(version.body.nl, dutch),
+      sent: fillTemplate(version.body[lang], sent),
       en: fillTemplate(version.body.en, english),
     },
+    language: lang,
     recipients: [politician.primary, ...politician.cc],
     politicianLabel: politicianLabel(politician),
   };
@@ -151,9 +258,9 @@ export const MAIL_SERVICES = {
  *    The duplicate is harmless: clients de-duplicate it.
  *
  * @param {object} args
- * @param {object} args.politician An entry from data/politicians.js
- * @param {string} args.subject    Dutch subject line
- * @param {string} args.body       Dutch email body
+ * @param {object} args.politician An entry from the country's politicians
+ * @param {string} args.subject    Subject line, already in the send language
+ * @param {string} args.body       Email body, already in the send language
  * @param {string} args.userAgent  navigator.userAgent
  */
 export function buildMailtoUrl({ politician, subject, body, userAgent }) {
@@ -193,9 +300,9 @@ export function buildMailtoUrl({ politician, subject, body, userAgent }) {
  *            has no desktop app, so Gmail goes straight to the website.
  *
  * @param {object} args
- * @param {object} args.politician An entry from data/politicians.js
- * @param {string} args.subject    Dutch subject line
- * @param {string} args.body       Dutch email body
+ * @param {object} args.politician An entry from the country's politicians
+ * @param {string} args.subject    Subject line, already in the send language
+ * @param {string} args.body       Email body, already in the send language
  * @param {'gmail'|'outlook'|'device'} args.service Which option was chosen
  * @param {string} args.userAgent  navigator.userAgent
  * @returns {{url: string, newTab: boolean, fallbackUrl: string|null,

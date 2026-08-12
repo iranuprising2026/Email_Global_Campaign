@@ -33,14 +33,17 @@ Violating any of these breaks the project for the people who maintain it:
    `package.json` and there should not be one.
 2. **A non-technical collaborator edits this repo.** Keep the editable data in
    `assets/js/data/` with plain-language "HOW TO EDIT THIS FILE" comment blocks.
-   Prefer clarity over cleverness in those two files especially.
+   Prefer clarity over cleverness in every file under that directory.
 3. **Never alter the campaign texts' factual content** — the Dutch/English email
    bodies name real people who were executed. Reformat or restructure freely;
    never reword the substance, change a name, an age, or a date unless the user
    explicitly asks.
-4. **A Dutch text and its English translation must always be changed together.**
-   The preview box exists so nobody is asked to send words they cannot read.
-   Letting the two drift apart is the worst bug this codebase can have.
+4. **A letter and its English translation must always be changed together**, in
+   every language the issue carries. The preview box exists so nobody is asked to
+   send words they cannot read. Letting the languages drift apart is the worst bug
+   this codebase can have. The same rule binds the **English and Persian
+   instruction cards** in `index.html`: they are a translation pair, so a change
+   to one is incomplete until the other matches.
 5. **Never add a `service_role` key.** The Supabase key in `config.js` is a
    publishable/anon key and is meant to be public. Row Level Security is the only
    protection on the stats table.
@@ -62,9 +65,21 @@ assets/fonts/               Inter .woff2 (2 latin subsets) for en/nl + IRANSans
                             README.md documents provenance and licences;
                             Inter-LICENSE.txt is required by the OFL — keep it.
 assets/js/
-  config.js                 Supabase creds, STATS_TABLE, ACTIVE_CAMPAIGN_ID, anon signature.
-  data/campaign.js        ← Email texts. Campaign → versions[] → {subject,body}×{nl,en}.
-  data/politicians.js     ← Recipients. {name, party, primary, cc[]} + label/lookup helpers.
+  config.js                 Supabase creds, STATS_TABLE, DEFAULT_COUNTRY_ID,
+                            DEFAULT_ISSUE_ID.
+  data/index.js           ← Registry: countries[], comingSoon[], issues[], lookups,
+                            politicianLabel, isSendable/sendableCountries/
+                            unavailableCountries, issuesForLanguage.
+  data/countries/nl.js    ← NL: id, name, languages[], terms, anonymousSignature,
+                            politicians[] {name, party, primary, cc[]}. 13 entries.
+  data/countries/ca.js    ← Canada, en only. 5 entries, one per party (Liberal,
+                            Conservative, NDP, Bloc Québécois, Green). Every
+                            address [VERIFIED 2026-08-12] off ourcommons.ca.
+  data/countries/uk.js    ← UK, en only. terms + demands written; `politicians: []`,
+                            so it stays greyed out as "coming soon".
+                            Addresses go to @parliament.uk, not parl.gc.ca.
+  data/issues/executions.js ← Email texts. versions[] → {subject,body} keyed by
+                            language (nl, en).
   email.js                  PURE. Exports buildEmail, buildMailtoUrl,
                             formatForClipboard, isMobileUserAgent.
   stats.js                  Supabase read/write. Never throws by design.
@@ -104,7 +119,7 @@ python3 -m http.server 8000    # then open http://localhost:8000
 on `export`, so copy to `.mjs` first):
 
 ```bash
-for f in assets/js/*.js assets/js/data/*.js; do cp "$f" /tmp/c.mjs; node --check /tmp/c.mjs || echo "FAIL $f"; done
+for f in assets/js/*.js assets/js/data/*.js assets/js/data/*/*.js; do cp "$f" /tmp/c.mjs; node --check /tmp/c.mjs || echo "FAIL $f"; done
 ```
 
 **Import a data module in Node** to inspect it (works because `config.js`,
@@ -143,6 +158,22 @@ URL shape per service, `newTab`/`fallbackUrl`/`fallbackDelayMs`, that the
 `intent:` payload round-trips to `buildMailtoUrl` output with no raw `;`/`#`, and
 that subject, body, To and both CCs survive encoding. Uses a subject and body
 containing `;`, `#` and `&` on purpose.
+
+**Verify a data-layer change without touching the repo** — the technique used on
+2026-08-12 to prove Canada goes live from one edit: `rsync -a --exclude .git
+--exclude docs ./ <scratch>/copy/`, edit only the data file there, then
+`diff -rq` against the real repo to prove nothing else differs, and import
+`<scratch>/copy/assets/js/data/index.js` in Node. Also the way to exercise
+multi-country branches that a single live country cannot reach — add throwaway
+`be.js`/`ca.js`/`de.js` in the copy.
+
+**Drive the real page headlessly** (asserting on DOM attributes alone is
+unreliable — see the chart gotcha). Copy `index.html` to `probe.html` in the repo
+root with an appended module script that runs on `window.load`, clicks
+`#generate`, and appends its findings as JSON in a `<pre id="probe-result">`;
+serve, `--dump-dom`, extract the `<pre>`, then delete `probe.html`. Wrap the
+probe body in try/catch and report the error into the same `<pre>` — a probe that
+throws is otherwise indistinguishable from a page that never ran.
 
 **Mining the command log.** A `PostToolUse` hook appends every Bash command run
 here to `.claude/command-log.txt` as `timestamp<TAB>command` (newlines escaped by
@@ -183,16 +214,51 @@ Note: `gh` is **not** installed on this machine.
   by hand with `encodeURIComponent`, **not** `URLSearchParams` — the latter
   encodes spaces as `+` and escapes parentheses differently. Do not "tidy" this
   without testing on real devices.
-- **Adding a 6th email version touches three files:** `data/campaign.js`, the
+- **Adding a 6th email version touches three files:** `data/issues/executions.js`, the
   `(1 to 5)` label in `index.html`, and `VERSION_COLORS` in `tracker.js` (only
   five colours; the list wraps, so a 6th version silently reuses the first).
   Any new bar colour must be **light** — the chart card is `--color-surface`
   navy, and `blue-800 #1b3a6b` is 1.45 against it, i.e. invisible.
-- **Adding a campaign touches three files:** `data/campaign.js`,
-  `ACTIVE_CAMPAIGN_ID` in `config.js`, and the fallback `<h2 id="campaign-title">`
-  in `index.html`.
+- **Adding a country or an issue touches exactly two places:** the new file in
+  `data/countries/` or `data/issues/`, and its `import` + list entry in
+  `data/index.js`. Nothing else — `isSendable()` decides on its own when a
+  country is ready, so there is no switch to flip. Changing which one loads
+  *first* also touches `DEFAULT_COUNTRY_ID`/`DEFAULT_ISSUE_ID` in `config.js` and
+  the fallback `<h2 id="campaign-title">` in `index.html`.
+- **A country is offered only if `isSendable()`:** ≥1 politician AND ≥1 language
+  with letters. Everything else lands in `unavailableCountries()` and renders as
+  a disabled "— coming soon" option. This exists because Canada *has* English
+  letters — a letters-only check would have shown it as live with an empty
+  recipient dropdown and a working Generate button. `comingSoon[]` in
+  `data/index.js` covers countries with no file at all (DE only now; UK has a
+  file with an empty `politicians`, so it is greyed out by `isSendable` instead
+  — a country must never be in both lists or it appears twice).
+- **`resolveSelection()` must reject a non-sendable country,** not just an
+  unknown one. `getCountry('ca')` returns a real object today; without the
+  `isSendable` guard, `?country=ca` would open a page that cannot send.
+- **`[DEMANDS]` is per country AND per version, and both halves are load-bearing.**
+  Per country because the demand is not true everywhere: NL and the UK still have
+  an Islamic Republic embassy, Canada closed its one in 2012 and listed the IRGC
+  in 2024, the UK proscribed the IRGC in July 2026. Per version because the five
+  letters vary the wording deliberately (anti-bulk-mail) and the grammar around
+  the placeholder differs — Version 4 reads "including [DEMANDS]" and needs a
+  noun phrase where Version 1 needs a full clause. A single string per country
+  would have forced a rewrite of the Dutch letters, which constraint 3 forbids.
+  `demands.default` covers any version without its own wording, so adding a 6th
+  version does not touch every country file. `buildEmail` throws if a letter
+  contains [DEMANDS] and the country has no wording for it — the check is
+  conditional on the text so a country whose letters never use it needs no field.
+- **`Firstname.Lastname@parl.gc.ca` is 17/18, not 18/18.** Measured against the
+  user's verified Canadian addresses: Robert Oliphant answers at `rob.oliphant@`.
+  Nicknames break it and the failure is silent (a bounce, or nothing). Accents
+  are stripped (`melanie.joly@`) and a multi-word first name is concatenated
+  (Lena Metlege Diab → `lenametlege.diab@`), which the PDF's flat text cannot
+  disambiguate. Never derive a **To** address from the pattern without saying so.
 - **Statistics are keyed on the string `"Name (PARTY)"`.** Renaming a politician
-  splits their chart history. Never change `politicianLabel()`'s format.
+  splits their chart history. Never change `politicianLabel()`'s format. Canada's
+  party strings are the full words `Liberal`, `Conservative`, `NDP`,
+  `Bloc Québécois`, `Green` — chosen for the dropdown's readability and now
+  frozen by the tracker.
 - **Version ids (`"Version 1"`…) are stored in the database.** Renaming one
   splits its stats too.
 - **`stats.js` swallows errors on purpose.** A failed count must never block a
@@ -209,6 +275,10 @@ Note: `gh` is **not** installed on this machine.
 - **When injecting a test `<script>` via `node -e '...'`,** shell single-quoting
   turns `\n` into a literal newline and breaks the JS string. Write the injector
   to a `.mjs` file instead of inlining it.
+- **The preview inputs and the translation panel are different element kinds.**
+  `#subject`/`#recipient`/`#output` are inputs (`.value`); `#trans-subject` and
+  `#trans-body` are `<div>`s (`.textContent`). Using `.value` on a div fails
+  silently on write and yields `undefined` on read.
 - **Cache-busting:** `?v=N` on `styles.css` works; it does **not** propagate to a
   module's imports, so bumping it on `app.js` would be misleading. GitHub Pages
   may serve stale assets for ~10 minutes. **Bump it in the same edit that
@@ -286,7 +356,23 @@ Unverified — confirm before relying on, and update this section once known:
   this machine has neither. iOS was reported working before the change and its
   URLs are unchanged. Ask the user for a real-device result before treating any
   of it as confirmed.
-- **Email addresses in `data/politicians.js` were carried over verbatim** and have
+- **Canada's addresses are all confirmed (2026-08-12).** All 24 were read off
+  each MP's own page at ourcommons.ca; `gary.anand@parl.gc.ca` is correct as the
+  user's Ministers PDF had it, and the pattern-derived
+  `gary.anandasangaree@` was wrong. Nothing in `ca.js` is guesswork.
+- **The UK's two campaign facts need re-checking before it launches.** Verified
+  2026-08-12 by web search: Iran's embassy at 16 Princes Gate London is open with
+  an ambassador in post since June 2025, and the UK proscribed the IRGC in July
+  2026 — one month before, so this ages fast. `uk.js` demands depend on both.
+- **Germany's embassy/IRGC status has NOT been checked.** Do it before writing
+  `de.js` demands; do not assume the Dutch wording transfers.
+- **The MP List PDF lists 339 MPs, not the full 343 seats.** Confirmed with the
+  stream filter widened to every text stream: Liberal 172, Conservative 139,
+  Bloc Québécois 21, NDP 5, Green 1, Independent 1. Whether the 4 missing are
+  vacancies or an export gap is unknown. Two rows also disagree with expectation
+  — Lori Idlout is listed Liberal and Alexandre Boulerice Independent; the PDF
+  was taken as the source of truth rather than corrected.
+- **Email addresses in `data/countries/nl.js` were carried over verbatim** and have
   not been checked against tweedekamer.nl. Two look odd but are intentional:
   `b.eerdmans@` for Joost Eerdmans (formal initial) and
   `j.jaspervandijk@` in the SP list.
@@ -322,6 +408,11 @@ Rules for edits:
 - **Never record secrets** — no tokens, no `service_role` keys, no personal data.
 - **Do not duplicate `README.md`.** That file is for humans maintaining the
   campaign; this one is for Claude working on the code. Cross-reference instead.
+- **README section 12 is the human-facing list of unfinished work.** When an item
+  under **Open questions** here is something the *organisers* must decide or check
+  (campaign wording, unverified addresses, a country's facts), it belongs in both:
+  there with the reasoning, section 12 with the instructions. Close it in both at
+  the same time, or one will lie.
 
 ---
 
@@ -397,6 +488,28 @@ prune anything superseded.
   `ms-outlook://` with the web link as fallback, iOS untouched. `buildComposeUrl`
   gained `fallbackDelayMs`; `openAppOrFallBack` now also checks
   `document.hasFocus()`. See the three new **Gotchas** bullets.
+- **2026-08-12** — Multi-country refactor finished and extended to NL + Canada
+  live-ish, Germany + UK advertised. A half-finished `git stash pop` had left
+  conflict markers in `app.js` (the stash predated the Android fix, so the
+  resolution needed both `findPoliticianByLabel(country, …)` and
+  `fallbackDelayMs`) — the page did not load at all until it was resolved.
+  Letters re-verified byte-identical to the pre-migration output: 260
+  combinations, 2340 comparisons including `mailto:` URLs on three platforms, 0
+  differences. `comingSoon[]` + `isSendable()` added so a country launches from
+  its data alone; `option:disabled` styling added and `styles.css?v=` bumped to
+  13 in the same edit. README rewritten around countries/issues (16 stale
+  references to the two deleted data files removed).
+- **2026-08-12** — Canada added as the second live country, one entry per party
+  (Liberal/Conservative/NDP/Bloc/Green), mirroring the Dutch "party's foreign
+  affairs figure as To, colleagues in CC" rule at the user's request. Sources:
+  an 18-name list vetted by a contact in Toronto, a 28-minister PDF, and a
+  full MP List PDF that carries names and parties but **no addresses**. All 28
+  ministers were confirmed to be sitting MPs, so no separate minister list is
+  needed. User decision: derived addresses are acceptable in CC, and as a To
+  only for parties with no vetted address at all (NDP, Bloc, Green) — each
+  marked `[DERIVED]` for their verification pass. Deliberately excluded: the
+  Persian role notes accompanying the Toronto list, which contain personal
+  remarks about named MPs and would have been published publicly.
 - **2026-08-03** — Added the Bash-logging `PostToolUse` hook (see **Commands**).
   **Deliberately did not add a `Stop` hook** to nag about updating this file:
   `prompt`/`agent` hook types only work on tool events, so a Stop reminder must be

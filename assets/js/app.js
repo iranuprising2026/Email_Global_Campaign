@@ -6,16 +6,36 @@
  * texts or the politician list, they are in assets/js/data/.
  */
 
-import { ACTIVE_CAMPAIGN_ID } from './config.js';
-import { getCampaign } from './data/campaign.js';
-import { politicians, politicianLabel, findPoliticianByLabel } from './data/politicians.js';
+import { DEFAULT_COUNTRY_ID, DEFAULT_ISSUE_ID } from './config.js';
+import {
+  getCountry,
+  getIssue,
+  issuesForLanguage,
+  languagesForCountry,
+  languageName,
+  politicianLabel,
+  findPoliticianByLabel,
+  isSendable,
+  sendableCountries,
+  unavailableCountries,
+} from './data/index.js';
 import { buildEmail, buildComposeUrl, formatForClipboard, MAIL_SERVICES } from './email.js';
 import { recordAction, ACTIONS } from './stats.js';
-import { renderTracker } from './tracker.js';
+import { renderTracker, trackerTopic } from './tracker.js';
 
-const campaign = getCampaign(ACTIVE_CAMPAIGN_ID);
+/** What is currently on screen. All set by applySelection(). */
+let country = null;
+let issue = null;
+let language = null;
 
 const el = {
+  country: document.getElementById('country'),
+  issue: document.getElementById('issue'),
+  language: document.getElementById('language'),
+  languageField: document.getElementById('language-field'),
+  labelSubject: document.getElementById('label-subject'),
+  labelRecipient: document.getElementById('label-recipient'),
+  labelOutput: document.getElementById('label-output'),
   campaignTitle: document.getElementById('campaign-title'),
   username: document.getElementById('username'),
   city: document.getElementById('city'),
@@ -54,22 +74,201 @@ function showStatus(message, kind = 'info') {
   el.status.hidden = !message;
 }
 
-function populateDropdowns() {
-  el.campaignTitle.textContent = campaign.title;
-
-  for (const politician of politicians) {
+/** Replace a dropdown's options. */
+function fillSelect(select, items) {
+  select.replaceChildren();
+  for (const { value, text, disabled } of items) {
     const option = document.createElement('option');
-    option.value = politicianLabel(politician);
-    option.textContent = politicianLabel(politician);
-    el.politician.append(option);
+    option.value = value;
+    option.textContent = text;
+    if (disabled) option.disabled = true;
+    select.append(option);
+  }
+}
+
+/**
+ * The Country dropdown never changes, so it is filled once.
+ *
+ * Countries that are not ready yet are listed too, greyed out and unselectable,
+ * so a visitor can see their country is planned rather than assuming the site
+ * has nothing for them. See unavailableCountries() in data/index.js.
+ */
+function populateCountries() {
+  fillSelect(el.country, [
+    ...sendableCountries().map((c) => ({ value: c.id, text: c.name })),
+    ...unavailableCountries().map((c) => ({
+      value: c.id,
+      text: `${c.name} — coming soon`,
+      disabled: true,
+    })),
+  ]);
+}
+
+/**
+ * Fill everything that depends on the chosen country and issue: the Issue
+ * dropdown, the heading, the politician list and the version list.
+ */
+function populateForSelection() {
+  fillSelect(
+    el.issue,
+    issuesForLanguage(language).map((i) => ({ value: i.id, text: i.title }))
+  );
+  el.issue.value = issue.id;
+  el.campaignTitle.textContent = issue.title;
+
+  // The language picker only earns its place in a bilingual country.
+  const languages = languagesForCountry(country);
+  el.languageField.hidden = languages.length < 2;
+  fillSelect(
+    el.language,
+    languages.map((code) => ({ value: code, text: languageName(code) }))
+  );
+  el.language.value = language;
+
+  fillSelect(
+    el.politician,
+    country.politicians.map((p) => ({
+      value: politicianLabel(p),
+      text: politicianLabel(p),
+    }))
+  );
+
+  fillSelect(
+    el.version,
+    issue.versions.map((v) => ({ value: v.id, text: v.id }))
+  );
+
+  // Say which language the letter is in, since it is no longer always Dutch.
+  const name = languageName(language);
+  el.labelOutput.textContent = `Preview (${name} text that will be sent):`;
+  el.labelSubject.textContent = `Subject (${name}):`;
+  el.labelRecipient.textContent = 'Recipient:';
+}
+
+/**
+ * Work out which country and issue to show, from the link the visitor followed.
+ *
+ * A mistyped or outdated shared link must still produce a working page, so
+ * anything unrecognised falls back instead of failing.
+ *
+ *   1. ?country= / ?issue= in the address, if they name things that exist.
+ *   2. The browser's language, e.g. nl-NL -> nl.
+ *   3. The defaults in config.js.
+ *
+ * A country that is not ready yet is treated the same as one that does not
+ * exist: a link to ?country=de must not open a page with nothing to send.
+ */
+function resolveSelection() {
+  const params = new URLSearchParams(window.location.search);
+
+  /** A country only counts here if a letter can actually be sent to it. */
+  const ready = (id) => {
+    const found = getCountry(id);
+    return found && isSendable(found) ? found : null;
+  };
+
+  const browserLanguage = (navigator.language || '').split('-').pop().toLowerCase();
+  const chosenCountry =
+    ready(params.get('country')) ||
+    ready(browserLanguage) ||
+    ready(DEFAULT_COUNTRY_ID) ||
+    sendableCountries()[0];
+
+  // Which language to write in. Only matters for a bilingual country.
+  const languages = languagesForCountry(chosenCountry);
+  const requested = params.get('lang');
+  const chosenLanguage = languages.includes(requested) ? requested : languages[0] || null;
+
+  // Only issues actually written in that language can be offered.
+  const available = chosenLanguage ? issuesForLanguage(chosenLanguage) : [];
+  const chosenIssue =
+    available.find((i) => i.id === params.get('issue')) ||
+    available.find((i) => i.id === DEFAULT_ISSUE_ID) ||
+    available[0] ||
+    null;
+
+  return { country: chosenCountry, issue: chosenIssue, language: chosenLanguage };
+}
+
+/**
+ * Put the current choice in the address bar, so the link can be shared.
+ *
+ * replaceState rather than pushState: switching country is not a separate page
+ * the Back button should have to walk through.
+ */
+function syncUrl() {
+  const params = new URLSearchParams(window.location.search);
+  params.set('country', country.id);
+  params.set('issue', issue.id);
+  // Only worth putting in the link where there is a real choice.
+  if (languagesForCountry(country).length > 1) params.set('lang', language);
+  else params.delete('lang');
+  window.history.replaceState({}, '', `${window.location.pathname}?${params}`);
+}
+
+/**
+ * Show a country that has no letters yet. Happens when a country file is added
+ * before its letters are translated.
+ */
+function showNoIssuesForCountry() {
+  el.campaignTitle.textContent = `No campaigns for ${country.name} yet`;
+  fillSelect(el.issue, []);
+  fillSelect(el.politician, []);
+  fillSelect(el.version, []);
+  el.languageField.hidden = true;
+  el.generate.disabled = true;
+  setActionsEnabled(false);
+  showStatus(
+    `There are no letters written for ${country.name} yet. Choose another country.`,
+    'info'
+  );
+}
+
+/**
+ * Nothing can be sent from anywhere. Only reachable if every country file is
+ * unfinished at once, which means somebody mid-edit -- so say so plainly
+ * instead of leaving a dead form on the page.
+ */
+function showNoCountriesReady() {
+  el.campaignTitle.textContent = 'No campaigns yet';
+  el.generate.disabled = true;
+  setActionsEnabled(false);
+  showStatus(
+    'No country has both letters and recipients set up yet. ' +
+      'See assets/js/data/index.js.',
+    'info'
+  );
+}
+
+/** Switch to a country and issue, refreshing everything that depends on them. */
+function applySelection(next) {
+  country = next.country;
+  issue = next.issue;
+  language = next.language;
+
+  el.country.value = country.id;
+
+  if (!issue) {
+    syncUrl();
+    showNoIssuesForCountry();
+    return;
   }
 
-  for (const version of campaign.versions) {
-    const option = document.createElement('option');
-    option.value = version.id;
-    option.textContent = version.id;
-    el.version.append(option);
-  }
+  el.generate.disabled = false;
+  populateForSelection();
+  syncUrl();
+
+  // The politician list and the letter language both just changed, so anything
+  // already generated is stale.
+  currentEmail = null;
+  el.subject.value = '';
+  el.recipient.value = '';
+  el.output.value = '';
+  el.translationArea.hidden = true;
+  setActionsEnabled(false);
+  showStatus('');
+
+  refreshTracker();
 }
 
 /** Preview goes stale as soon as the visitor changes any input. */
@@ -97,31 +296,37 @@ function showMailChoices(open) {
 }
 
 function generate() {
-  const politician = findPoliticianByLabel(el.politician.value);
+  const politician = findPoliticianByLabel(country, el.politician.value);
   if (!politician) {
     showStatus('Please choose a politician.', 'error');
     return;
   }
 
   currentEmail = buildEmail({
-    campaign,
+    country,
+    issue,
+    language,
     versionId: el.version.value,
     politician,
     userName: el.username.value,
     city: el.city.value,
   });
 
-  el.subject.value = currentEmail.subject.nl;
+  el.subject.value = currentEmail.subject.sent;
   el.recipient.value = currentEmail.recipients.join('; ');
-  el.output.value = currentEmail.body.nl;
+  el.output.value = currentEmail.body.sent;
 
   el.transSubject.textContent = currentEmail.subject.en;
   el.transBody.textContent = currentEmail.body.en;
-  el.translationArea.hidden = false;
+  // An English-speaking country needs no translation panel: it would just
+  // repeat the letter the visitor is already reading above.
+  el.translationArea.hidden = currentEmail.language === 'en';
 
   setActionsEnabled(true);
   showStatus(
-    'Ready. Read the English translation below, then open your email app.',
+    currentEmail.language === 'en'
+      ? 'Ready. Read the letter above, then open your email app.'
+      : 'Ready. Read the English translation below, then open your email app.',
     'success'
   );
 }
@@ -162,11 +367,11 @@ async function openMail(service) {
     return;
   }
 
-  const politician = findPoliticianByLabel(el.politician.value);
+  const politician = findPoliticianByLabel(country, el.politician.value);
   const { url, newTab, fallbackUrl, fallbackDelayMs } = buildComposeUrl({
     politician,
-    subject: currentEmail.subject.nl,
-    body: currentEmail.body.nl,
+    subject: currentEmail.subject.sent,
+    body: currentEmail.body.sent,
     service,
     userAgent: navigator.userAgent,
   });
@@ -197,7 +402,7 @@ async function openMail(service) {
     politicianLabel: currentEmail.politicianLabel,
     versionId: el.version.value,
     actionType: ACTIONS[service],
-    campaignId: campaign.id,
+    campaignId: trackerTopic(country, issue),
   });
   refreshTracker();
 }
@@ -210,8 +415,8 @@ async function copyAll() {
 
   const text = formatForClipboard({
     recipients: currentEmail.recipients,
-    subject: currentEmail.subject.nl,
-    body: currentEmail.body.nl,
+    subject: currentEmail.subject.sent,
+    body: currentEmail.body.sent,
   });
 
   try {
@@ -230,18 +435,67 @@ async function copyAll() {
     politicianLabel: currentEmail.politicianLabel,
     versionId: el.version.value,
     actionType: ACTIONS.copy,
-    campaignId: campaign.id,
+    campaignId: trackerTopic(country, issue),
   });
   refreshTracker();
 }
 
 function refreshTracker() {
-  renderTracker(campaign, el.chart, el.chartNote);
+  renderTracker(country, issue, el.chart, el.chartNote);
 }
 
 function init() {
-  populateDropdowns();
+  populateCountries();
   setActionsEnabled(false);
+
+  // Fill everything in from the link the visitor followed. applySelection()
+  // calls refreshTracker(), which is why the window.load guard at the bottom
+  // only applies to the very first draw.
+  const initial = resolveSelection();
+  if (!initial.country) {
+    showNoCountriesReady();
+    return;
+  }
+
+  country = initial.country;
+  issue = initial.issue;
+  language = initial.language;
+  el.country.value = country.id;
+  if (issue) {
+    populateForSelection();
+  } else {
+    showNoIssuesForCountry();
+  }
+  syncUrl();
+
+  el.country.addEventListener('change', () => {
+    const chosen = getCountry(el.country.value);
+    // The "coming soon" options are disabled, so this should be unreachable --
+    // but a dropdown left on an unselectable value must not blank the page.
+    if (!chosen || !isSendable(chosen)) {
+      el.country.value = country.id;
+      return;
+    }
+
+    const languages = languagesForCountry(chosen);
+    // Keep the same language if the new country writes it, else its first.
+    const keptLanguage = languages.includes(language) ? language : languages[0] || null;
+    // Keep the same issue if it exists in that language, else its first.
+    const available = keptLanguage ? issuesForLanguage(keptLanguage) : [];
+    const keptIssue = available.find((i) => i.id === issue?.id) || available[0] || null;
+    applySelection({ country: chosen, issue: keptIssue, language: keptLanguage });
+  });
+
+  el.issue.addEventListener('change', () => {
+    applySelection({ country, issue: getIssue(el.issue.value) || issue, language });
+  });
+
+  el.language.addEventListener('change', () => {
+    const chosen = el.language.value;
+    const available = issuesForLanguage(chosen);
+    const keptIssue = available.find((i) => i.id === issue?.id) || available[0] || null;
+    applySelection({ country, issue: keptIssue, language: chosen });
+  });
 
   el.generate.addEventListener('click', generate);
 

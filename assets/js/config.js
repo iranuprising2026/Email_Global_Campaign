@@ -22,15 +22,10 @@ export const SUPABASE_ANON_KEY = 'sb_publishable_UDllYN6zVMFDI6P8Fy3SCQ_YD50E_bs
 export const STATS_TABLE = 'email_stats';
 
 /**
- * Which campaign from assets/js/data/campaign.js is currently live.
+ * What the page shows when the visitor arrives without a link that says
+ * otherwise, and their browser language does not match a country we have.
  *
- * To run a different campaign later: add it to campaign.js, then change this
- * one line. The tracker keeps each campaign's counts separate.
+ * These must match an id in assets/js/data/index.js.
  */
-export const ACTIVE_CAMPAIGN_ID = 'executions';
-
-/** Shown as the signature when the visitor leaves the name field empty. */
-export const ANONYMOUS_SIGNATURE = {
-  nl: 'Een Iraanse inwoner in Nederland',
-  en: 'An Iranian resident in the Netherlands',
-};
+export const DEFAULT_COUNTRY_ID = 'nl';
+export const DEFAULT_ISSUE_ID = 'executions';

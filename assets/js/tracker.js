@@ -16,7 +16,7 @@
  * politician is also one bar per party.
  */
 
-import { politicians, politicianLabel } from './data/politicians.js';
+import { politicianLabel } from './data/index.js';
 import { fetchActions } from './stats.js';
 
 /**
@@ -37,6 +37,17 @@ function token(name) {
     .trim();
 }
 
+/**
+ * The key the counts are stored under, e.g. "nl:executions".
+ *
+ * Country AND issue, because otherwise Dutch and German execution emails would
+ * be counted together and the chart would show German politicians under a
+ * Dutch total. Changing this format splits every campaign's history.
+ */
+export function trackerTopic(country, issue) {
+  return `${country.id}:${issue.id}`;
+}
+
 let chart = null;
 
 /**
@@ -45,11 +56,11 @@ let chart = null;
  *
  * @returns {{labels: string[], datasets: object[], total: number}}
  */
-function tallyActions(actions, campaign) {
+function tallyActions(actions, country, issue) {
   // How many actions each politician received, per version and in total.
-  const rows = politicians.map((politician) => {
+  const rows = country.politicians.map((politician) => {
     const label = politicianLabel(politician);
-    const perVersion = campaign.versions.map(
+    const perVersion = issue.versions.map(
       (version) =>
         actions.filter(
           (row) =>
@@ -70,7 +81,7 @@ function tallyActions(actions, campaign) {
   return {
     labels: rows.map((r) => r.label),
     total: rows.reduce((sum, r) => sum + r.total, 0),
-    datasets: campaign.versions.map((version, index) => ({
+    datasets: issue.versions.map((version, index) => ({
       label: version.id,
       data: rows.map((r) => r.perVersion[index]),
       backgroundColor: VERSION_COLORS[index % VERSION_COLORS.length],
@@ -91,12 +102,13 @@ function showNote(noteElement, message) {
 /**
  * Draw or redraw the chart.
  *
- * @param {object} campaign  The active campaign
+ * @param {object} country  The selected country, whose politicians are the bars
+ * @param {object} issue    The selected issue, whose versions are the stacks
  * @param {HTMLCanvasElement} canvas
  * @param {HTMLElement} noteElement  Where to explain a failure to the visitor
  */
-export async function renderTracker(campaign, canvas, noteElement) {
-  const actions = await fetchActions(campaign.id);
+export async function renderTracker(country, issue, canvas, noteElement) {
+  const actions = await fetchActions(trackerTopic(country, issue));
 
   if (actions === null) {
     showNote(
@@ -111,7 +123,7 @@ export async function renderTracker(campaign, canvas, noteElement) {
     return;
   }
 
-  const { labels, datasets, total } = tallyActions(actions, campaign);
+  const { labels, datasets, total } = tallyActions(actions, country, issue);
 
   // A brand-new campaign has no rows yet. An empty chart looks broken, so say
   // what is actually going on.

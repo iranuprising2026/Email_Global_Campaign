@@ -17,11 +17,12 @@ create table if not exists public.email_stats (
     created_at      timestamptz not null default now(),
 
     -- "Caspar Veldkamp (NSC)" — matches politicianLabel() in
-    -- assets/js/data/politicians.js
+    -- assets/js/data/index.js, built from a politician in
+    -- assets/js/data/countries/<country>.js
     politician_name text not null,
 
     -- "Version 1" ... "Version 5" — matches the version ids in
-    -- assets/js/data/campaign.js
+    -- assets/js/data/issues/<issue>.js
     version_name    text not null,
 
     -- 'Gmail' | 'Outlook' | 'Mail App' | 'Copy All' — see ACTIONS in stats.js.
@@ -30,7 +31,11 @@ create table if not exists public.email_stats (
     -- column, so the old values are harmless.
     action_type     text not null,
 
-    -- Campaign id, e.g. 'executions'. Keeps campaigns' counts separate.
+    -- Which campaign the action belongs to. Keeps counts separate.
+    -- Format: "<country>:<issue>", e.g. "nl:executions". Country AND issue,
+    -- because otherwise Dutch and German execution emails would be counted
+    -- together and the chart would show German politicians under a Dutch
+    -- total. Changing this format splits every campaign's history.
     topic           text not null
 );
 

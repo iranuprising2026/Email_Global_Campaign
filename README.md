@@ -1,8 +1,10 @@
 # Email Global Campaign
 
-A one-page website that helps people in the Netherlands send an email to members
-of the Dutch parliament (Tweede Kamer), demanding action against the executions
-in Iran.
+A one-page website that helps people email members of their own national
+parliament, demanding action against the executions in Iran. A visitor picks
+their country and gets a ready-to-send letter addressed to that parliament, in
+that country's language. The Netherlands and Canada are live; the United Kingdom
+and Germany are listed as coming soon.
 
 **This guide is written for everyone on the team, including people who have never
 edited code before.** If you can follow a recipe, you can maintain this site.
@@ -23,6 +25,7 @@ Nothing here requires you to be a programmer.
 9. [How it works under the hood](#9-how-it-works-under-the-hood)
 10. [Project structure](#10-project-structure)
 11. [Maintenance](#11-maintenance)
+12. [Open items and decisions, for later](#12-open-items-and-decisions-for-later)
 
 ---
 
@@ -30,19 +33,28 @@ Nothing here requires you to be a programmer.
 
 From a supporter's point of view:
 
-1. They type their **name and city** — both optional. If they leave the name
-   blank, the email is signed "Een Iraanse inwoner in Nederland" (An Iranian
-   resident in the Netherlands), so people who fear identification can still act.
-2. They pick a **politician**. Each choice actually emails four people: the
-   politician, two colleagues from their party, and the party's general inbox.
-3. They pick one of **five versions** of the email.
-4. They press **Generate Email Content**. The Dutch email appears, together with
-   an **English translation** — nobody is asked to send words they cannot read.
-5. They press **Open Email**, which opens their own mail app with everything
+1. They pick their **country**, and the **issue** they want to write about. The
+   choice is kept in the page address, so a link like `?country=nl` can be
+   shared to land somebody straight on the right one.
+2. They type their **name and city** — both optional. If they leave the name
+   blank, the email is signed for them — "Een Iraanse inwoner in Nederland" (An
+   Iranian resident in the Netherlands) — so people who fear identification can
+   still act.
+3. They pick a **politician** — one choice per party. Each choice emails that
+   party's foreign-affairs figure or leader *plus* colleagues from the same
+   party, so one send reaches a whole party bloc: four people in the
+   Netherlands, up to seven in Canada.
+4. They pick one of **five versions** of the email.
+5. They press **Generate Email Content**. The letter appears in the language it
+   will be sent in, together with an **English translation** — nobody is asked to
+   send words they cannot read. A country that writes in English needs no
+   translation panel, so it is hidden there.
+6. They press **Open Email**, which opens their own mail app with everything
    filled in. They still press Send themselves, from their own address.
-6. The action is counted in the **Live Action Tracker** at the bottom of the
+7. The action is counted in the **Live Action Tracker** at the bottom of the
    page, so supporters can see which politicians have been contacted least and
-   aim there instead.
+   aim there instead. Counts are kept per country and issue, so nothing is mixed
+   together.
 
 Two design decisions are worth knowing, because they look like mistakes and
 aren't:
@@ -61,17 +73,56 @@ Ninety percent of the time, it is one of the first two:
 
 | I want to change… | Edit this file |
 | --- | --- |
-| The email texts (Dutch or English) | `assets/js/data/campaign.js` |
-| The politicians and their addresses | `assets/js/data/politicians.js` |
+| The politicians and their email addresses | `assets/js/data/countries/` — one file per country |
+| The email texts | `assets/js/data/issues/` — one file per issue |
+| Which countries and issues exist at all | `assets/js/data/index.js` |
 | The instructions shown at the top, in English or Persian | `index.html` |
 | Colours, spacing, fonts | `assets/css/styles.css` |
-| Which campaign is live | `assets/js/config.js` |
+| Which country and issue a visitor sees by default | `assets/js/config.js` |
 | The chart colours | `assets/js/tracker.js` |
 | How the page behaves when buttons are pressed | `assets/js/app.js` |
 
-The two data files are written to be edited by non-programmers. Open one and
-read the comment block at the top before changing anything — it explains the
-format of that specific file.
+Everything inside `assets/js/data/` is written to be edited by non-programmers.
+Open a file and read the comment block at the top before changing anything — it
+explains the format of that specific file.
+
+**The rule to remember:** recipients belong to a **country**, letters belong to
+an **issue**. They are kept apart on purpose, because countries share letters —
+Belgium would reuse the Dutch letters, Austria the German ones. If the letters
+were stored per country, the same text would exist in two places and the two
+copies would eventually disagree.
+
+### Where the email addresses live
+
+Each country has its own file named after its two-letter code, and everything
+about that country is in it — including every address a letter can be sent to:
+
+```
+assets/js/data/countries/
+  nl.js    Netherlands — 13 recipients, one per party
+  ca.js    Canada — 5 recipients, one per party
+  uk.js    United Kingdom — ready except for its recipients
+```
+
+So "who do we write to in Canada" is answered in exactly one place, `ca.js`,
+and you never have to touch code to answer it.
+
+Both countries follow the same rule: **one entry per party.** The address in the
+`To` field is that party's foreign-affairs figure or its leader; other MPs from
+the same party go in the `CC`. One send therefore reaches a whole party bloc,
+and the dropdown offers a supporter one choice per party rather than a long list
+of individual names.
+
+> **Always look an address up; never guess it.** Every address in `ca.js` carries
+> a `[VERIFIED]` comment with the date it was read off that MP's own page at
+> [ourcommons.ca/members](https://www.ourcommons.ca/members). Do that for anyone
+> you add. Parliamentary addresses are *usually*
+> `Firstname.Lastname@parl.gc.ca`, but not always — Robert Oliphant answers at
+> `rob.oliphant@` and Gary Anandasangaree at `gary.anand@`. A guessed address
+> fails silently: the supporter presses Send and nothing arrives, with no warning
+> to anyone. Note also that the downloadable MP list from ourcommons.ca has no
+> email addresses in it at all — they exist only on the individual profile
+> pages.
 
 ---
 
@@ -212,11 +263,16 @@ A trailing comma after the **last** entry is fine and normal — leave it there.
 
 ### 4.2 Add a politician
 
-File: **`assets/js/data/politicians.js`**
+File: **the country's own file in `assets/js/data/countries/`** — `nl.js` for a
+Dutch MP, `ca.js` for a Canadian one. Scroll to the `politicians:` list at the
+bottom.
 
-1. **Verify every address on tweedekamer.nl first.** A wrong address means a
-   supporter's effort goes nowhere.
+1. **Verify every address on the parliament's own website first**
+   (tweedekamer.nl for the Netherlands, ourcommons.ca/members for Canada). A
+   wrong address means a supporter's effort goes nowhere.
 2. Find any existing entry and copy the whole block, from `{` down to `},`.
+   In a country whose list is still empty, copy the example block out of the
+   comment just above the list instead.
 3. Paste it just before the final `];` at the end of the list.
 4. Change the four values:
 
@@ -238,14 +294,20 @@ File: **`assets/js/data/politicians.js`**
 
 Nothing else needs changing — the dropdown, the email greeting and the chart all
 pick up the new entry automatically. `cc` may hold as many or as few addresses as
-you like.
+you like, including none at all (`cc: []`).
+
+**Adding the first recipient to an empty country launches it.** A country with
+nobody to write to shows in the Country dropdown greyed out as "coming soon".
+The moment its `politicians:` list has one entry, it becomes selectable on its
+own — you do not have to switch anything on anywhere else. That is why Canada is
+greyed out today: `ca.js` is complete apart from its list of MPs.
 
 ### 4.3 Add a sixth email version
 
-File: **`assets/js/data/campaign.js`** — plus **two other files**, which is why
-this one needs care.
+File: **`assets/js/data/issues/executions.js`** — plus **two other files**, which
+is why this one needs care.
 
-**Step 1.** In `campaign.js`, copy an entire existing version block — from `{`
+**Step 1.** In `executions.js`, copy an entire existing version block — from `{`
 before `id:` down to its closing `},` — and paste it before the closing `],` of
 the `versions` list. Then change all five values:
 
@@ -253,9 +315,9 @@ the `versions` list. Then change all five values:
       {
         id: 'Version 6',                  // must be unique
         subject: {
-          nl: 'Dutch subject line',       // what gets sent
-          en: 'English translation',      // what the supporter is shown
-        },
+          nl: 'Dutch subject line',       // sent to a Dutch politician
+          en: 'English translation',       // shown to the supporter as the
+        },                                 // preview, and sent in Canada
         body: {
           nl: 'Geachte [NAME],\n\n…\n\nMet vriendelijke groet,\n[USER]\n[CITY]',
           en: 'Dear [NAME],\n\n…\n\nKind regards,\n[USER]\n[CITY]',
@@ -263,9 +325,38 @@ the `versions` list. Then change all five values:
       },
 ```
 
-Keep the placeholders `[NAME]`, `[USER]` and `[CITY]` exactly as written — they
-are filled in automatically. `\n` means "new line"; `\n\n` leaves a blank line
-between paragraphs.
+Each key under `subject` and `body` is a **language**, not a country: `nl` is
+used for the Netherlands, `en` for Canada. **Always write both, and make them
+say the same thing** — the preview box shows the English to somebody who cannot
+read the Dutch, and letting the two drift apart is the worst mistake possible
+here.
+
+Keep the placeholders exactly as written — they are filled in automatically:
+
+| Placeholder | Becomes |
+| --- | --- |
+| `[NAME]` | The politician being written to |
+| `[USER]` | The supporter's name, or an anonymous line if they leave it blank |
+| `[CITY]` | The supporter's city, removed entirely if they leave it blank |
+| `[COUNTRY]` | `Nederland` / `Canada` — from the country's file |
+| `[GOVERNMENT]` | `de Nederlandse regering` / `the Canadian government` |
+| `[DEMANDS]` | The measures this letter asks for — **different in every country** |
+
+Use these placeholders instead of naming a country or a demand in the text. That
+is what lets one letter serve every country. `\n` means "new line"; `\n\n`
+leaves a blank line between paragraphs.
+
+> **`[DEMANDS]` is the one to be careful with.** What to demand is not the same
+> everywhere. The Islamic Republic still has an embassy in the Netherlands and in
+> London, so demanding its closure is a real demand there. **Canada closed its
+> one in 2012** — so the Dutch wording would ask a Canadian MP to do something
+> they already did fourteen years ago, and several of the Canadian MPs on our
+> list are the people who did it. Each country writes its own wording under
+> `demands` in its own file, one per email version.
+>
+> This also means the words *around* `[DEMANDS]` matter: if you reword the
+> sentence it sits in, re-read every country's `demands` to check the grammar
+> still fits.
 
 **Step 2.** In **`index.html`**, find this line and change `1 to 5` to `1 to 6`:
 
@@ -286,46 +377,80 @@ card, so a dark colour would be invisible against it.
 **Step 4.** Save all three files, refresh, and check that the dropdown offers
 Version 6 and that generating it produces the right text.
 
-### 4.4 Add a new campaign
+### 4.4 Add a country
 
-A campaign is a whole set of versions with its own heading. Only one is live at
-a time, and each keeps its own statistics — so switching back and forth never
-loses numbers.
+This is two steps: one new file, one line added to the index.
 
-**Step 1.** In `assets/js/data/campaign.js`, copy the entire `executions: { … }`
-block — from `executions:` down to its closing `},` — and paste it after. Give
-the copy a new short, lower-case name and its own `title`:
+**Step 1.** In `assets/js/data/countries/`, copy `nl.js` and rename the copy to
+the country's two-letter code — `de.js` for Germany, `uk.js` for the United
+Kingdom. Then work down the file changing every value: `id` (must match the
+filename), `name`, `languages`, `terms`, `anonymousSignature`, and the
+`politicians` list. The comments in the file explain each one.
 
-```js
-  politicalPrisoners: {
-    id: 'politicalPrisoners',        // must match the name on the line above
-    title: 'Free the Political Prisoners',
-    versions: [
-      // … your versions here
-    ],
-  },
-```
-
-The `id` must be spelled identically to the name before the colon.
-
-**Step 2.** In **`assets/js/config.js`**, point the site at it:
+**Step 2.** In `assets/js/data/index.js`, add two lines — an `import` at the top
+and the country's name in the `countries` list:
 
 ```js
-export const ACTIVE_CAMPAIGN_ID = 'politicalPrisoners';
+import de from './countries/de.js';        // ← added
+
+export const countries = [nl, ca, de];     // ← de added
 ```
 
-**Step 3.** In **`index.html`**, update the fallback heading so it matches (this
-text is only shown if JavaScript fails, but it should still be correct):
+That is all. There is no third file to remember.
+
+**If the letters do not exist in that country's language yet**, add the country
+anyway — it will show greyed out as "coming soon" until they do, and it goes
+live by itself once they exist. A country is offered to visitors only when it has
+**both** somebody to write to **and** a letter in a language it uses. Neither
+half can be forgotten silently.
+
+**To advertise a country before making its file at all**, add one line to the
+`comingSoon` list in `index.js` instead:
+
+```js
+export const comingSoon = [
+  { id: 'de', name: 'Germany' },
+  { id: 'uk', name: 'United Kingdom' },
+  { id: 'fr', name: 'France' },        // ← added
+];
+```
+
+It then appears greyed out in the dropdown as "France — coming soon". Remember to
+delete that line on the day France gets a real `fr.js`, or it would be listed
+twice.
+
+### 4.5 Add a new issue
+
+An issue is a whole set of letter versions with its own heading — the executions
+campaign is one. Each keeps its own statistics, per country, so nothing is ever
+mixed up or lost.
+
+**Step 1.** In `assets/js/data/issues/`, copy `executions.js` to a new file named
+after the issue, e.g. `hostages.js`, and change its `id`, its `title` and all its
+versions. The `id` must match the filename.
+
+**Step 2.** In `assets/js/data/index.js`, add the `import` line and the name to
+the `issues` list, exactly as for a country:
+
+```js
+import hostages from './issues/hostages.js';   // ← added
+
+export const issues = [executions, hostages];  // ← hostages added
+```
+
+**Step 3.** Save and refresh. The new issue appears in the Issue dropdown for
+**every country whose language it has been translated into** — and only those, so
+a half-translated issue can never reach the wrong country.
+
+To make it the one visitors see first, set `DEFAULT_ISSUE_ID` in
+`assets/js/config.js`, and update the fallback heading in `index.html` to match
+(that text is only shown if JavaScript fails, but it should still be correct):
 
 ```html
 <h2 id="campaign-title">Stop Daily Executions Campaign</h2>
 ```
 
-**Step 4.** Save, refresh, and confirm the new heading and versions appear. To
-switch back, change `ACTIVE_CAMPAIGN_ID` again — the old campaign's texts and
-statistics are still there.
-
-### 4.5 Add a chart colour
+### 4.6 Add a chart colour
 
 File: **`assets/js/tracker.js`**, the `VERSION_COLORS` list. One colour per
 version, in order. Each is a hex code in quotes. If there are fewer colours than
@@ -335,7 +460,7 @@ Pick something **light**. The chart sits on a dark navy card, so dark colours
 disappear against it. The existing five run from medium blue to almost white;
 anything in that range works.
 
-### 4.6 After adding anything
+### 4.7 After adding anything
 
 - [ ] Refresh your local page (section 3) — it loads without a blank screen.
 - [ ] The new entry appears where you expected.
@@ -348,13 +473,18 @@ anything in that range works.
 
 ### Change the wording of an existing email
 
-1. Open `assets/js/data/campaign.js` and find the version, e.g. `id: 'Version 3'`.
+1. Open the issue's file in `assets/js/data/issues/` — `executions.js` for the
+   executions campaign — and find the version, e.g. `id: 'Version 3'`.
 2. Change the Dutch text **and** its English translation:
    - `subject.nl` — the Dutch subject line that gets sent
-   - `subject.en` — the English translation shown to the supporter
+   - `subject.en` — the English translation shown to the supporter, and the
+     subject actually sent in an English-speaking country
    - `body.nl` — the Dutch email that gets sent
    - `body.en` — the English translation of it
-3. Keep `[NAME]`, `[USER]`, `[CITY]` and the `\n` line breaks as they are.
+3. Keep `[NAME]`, `[USER]`, `[CITY]`, `[COUNTRY]`, `[GOVERNMENT]` and the `\n`
+   line breaks as they are.
+4. Remember the text is shared by every country using that language, so never
+   name one country in it — that is what `[COUNTRY]` and `[GOVERNMENT]` are for.
 
 > **If you change a Dutch text, you must change its English translation too.**
 > A supporter who is shown an inaccurate translation is being asked to sign
@@ -363,17 +493,60 @@ anything in that range works.
 
 ### Remove a politician
 
-Delete their whole block, from `{` to the matching `},`. Their past statistics
+In the country's file in `assets/js/data/countries/`, delete their whole block,
+from `{` to the matching `},`. Their past statistics
 stay in the database but are no longer shown.
 
 Careful with **renaming**: statistics are stored under "Name (PARTY)", so a
 renamed politician starts a fresh bar in the chart and their old numbers remain
 under the old name. Renaming is fine — just expect the numbers to split.
 
+### Change what the letters demand
+
+File: **the country's own file in `assets/js/data/countries/`**, under `demands`.
+
+This is the one edit where the same words are **not** right for every country,
+so it deserves a moment's thought.
+
+The letters do not contain the demand itself. They contain `[DEMANDS]`, and each
+country supplies its own wording. The reason:
+
+| Country | The Islamic Republic embassy | The IRGC |
+| --- | --- | --- |
+| Netherlands | Open — so demanding closure is a live demand | Not proscribed by the EU — live demand |
+| Canada | **Closed since 2012** | **Listed since 2024** |
+| United Kingdom | Open in London — live demand | **Proscribed since July 2026** |
+
+If Canada reused the Dutch wording, a Canadian MP would be asked to close an
+embassy that closed fourteen years ago — and several of the MPs on our Canadian
+list are the people who closed it. So Canada's wording asks them to *hold* that
+line and enforce it instead.
+
+**There is one wording per email version**, because the five versions phrase the
+demand differently on purpose and the grammar differs. Version 4 reads
+"...measures must follow, including `[DEMANDS]`" and needs a phrase starting like
+"closure of the embassy"; version 1 reads "...if the executions do not stop,
+`[DEMANDS]`" and needs a full sentence. Any version you do not write a wording
+for falls back to `default`.
+
+**To change one:** open the country file, find `demands`, and find the version.
+Then open `assets/js/data/issues/executions.js`, find that same version, and read
+the whole sentence around `[DEMANDS]` — your words have to fit inside it. Save,
+refresh, press Generate, and read the result aloud. If it reads as a sentence,
+it is right.
+
+**These facts go stale.** The UK proscribed the IRGC one month before this was
+written. Re-check the table above before launching a new country, and whenever
+you review the letters — section 12.5 keeps the dated version of it.
+
+Two open questions about the demands are recorded in section 12: whether to add
+deportation of regime officials to Canada's wording (12.1), and Germany's facts
+being unchecked (12.4).
+
 ### Change the campaign heading
 
-Edit the `title` line in `assets/js/data/campaign.js`, and the fallback `<h2>` in
-`index.html` to match.
+Edit the `title` line in the issue's file in `assets/js/data/issues/`, and the
+fallback `<h2>` in `index.html` to match.
 
 ### Change the colours
 
@@ -444,7 +617,7 @@ immediate, **preview locally first** (section 3).
 Best for small text fixes, and the easiest route if you don't use git.
 
 1. Go to the repository on github.com and click the file you want to change,
-   e.g. `assets/js/data/campaign.js`.
+   e.g. `assets/js/data/issues/executions.js`.
 2. Click the **pencil icon** (Edit this file).
 3. Make your change.
 4. Scroll down, write a short description of what you changed, e.g.
@@ -511,8 +684,8 @@ Reverting is safer than deleting history, and it publishes the fix the same way.
 
 ### The whole page is blank or the dropdowns are empty
 
-Almost always a typo in one of the data files — see the four common mistakes in
-section 4.1. To find it:
+Almost always a typo in one of the files under `assets/js/data/` — see the four
+common mistakes in section 4.1. To find it:
 
 1. In the browser, press **F12** (Mac: `Cmd+Option+I`) and open the
    **Console** tab.
@@ -569,7 +742,11 @@ If the app *is* installed and the website still wins:
 - **No personal data is collected.** The supporter's name, city and email text
   never leave their browser. Only the politician's name, the version number and
   the type of click are recorded. Please keep it that way.
-- **Verify email addresses** against tweedekamer.nl before adding them.
+- **Verify email addresses** against the parliament's own website before adding
+  them — tweedekamer.nl for the Netherlands, ourcommons.ca/members for Canada.
+- **Never let a country go live half-finished.** A country is only offered once
+  it has both recipients and letters; the site enforces this, so don't work
+  around it.
 - **Keep the translations honest** — see the warning in section 5.
 - **Don't "simplify" the mailto code** in `assets/js/email.js` without testing
   on real devices. The odd-looking parts are there because different mail apps
@@ -587,20 +764,26 @@ ES modules, plus two libraries from a CDN. Open a file, edit, refresh.
 **Data flow**
 
 ```
-data/campaign.js  ─┐
-data/politicians.js┼─> email.js (pure) ──> app.js ──> DOM + mailto:
-config.js         ─┘                          │
-                                              ├──> stats.js ──> Supabase
-                                              └──> tracker.js ──> Chart.js
+data/countries/*.js ─┐
+data/issues/*.js     ├─> data/index.js ─> email.js (pure) ─> app.js ─> DOM + mailto:
+config.js           ─┘                                         │
+                                                               ├─> stats.js ─> Supabase
+                                                               └─> tracker.js ─> Chart.js
 ```
+
+`data/index.js` is the only place that knows which countries and issues exist.
+Countries hold recipients; issues hold letters keyed by language; a country
+points at the languages it can be written in. That is what lets two countries
+share one letter without duplicating its text.
 
 **Module responsibilities**
 
 | File | Responsibility |
 | --- | --- |
-| `config.js` | Settings: Supabase credentials, active campaign |
-| `data/politicians.js` | The recipient list, plus label/lookup helpers |
-| `data/campaign.js` | Campaign texts in Dutch and English |
+| `config.js` | Settings: Supabase credentials, default country and issue |
+| `data/index.js` | The registry of countries and issues, plus lookup helpers and the rule deciding which countries are ready |
+| `data/countries/*.js` | One file per country: its language, its wording, its recipients |
+| `data/issues/*.js` | One file per issue: the letter versions, keyed by language |
 | `email.js` | Pure functions: fill templates, build the `mailto:` URL |
 | `stats.js` | Supabase reads and writes; never throws |
 | `tracker.js` | Renders the Chart.js stacked bar chart |
@@ -646,8 +829,12 @@ not.
 │       ├── stats.js              Records and reads action counts
 │       ├── tracker.js            Draws the chart, holds the colour list
 │       └── data/
-│           ├── campaign.js       ← the email texts
-│           └── politicians.js    ← the recipients
+│           ├── index.js          ← which countries and issues exist
+│           ├── countries/
+│           │   ├── nl.js         ← Netherlands: wording + recipients
+│           │   └── ca.js         ← Canada: recipients not filled in yet
+│           └── issues/
+│               └── executions.js ← the email texts, per language
 └── docs/
     └── supabase-schema.sql       Database structure and security rules
 ```
@@ -677,9 +864,119 @@ Current versions: `@supabase/supabase-js@2.45.4`, `chart.js@4.4.1`.
 ### Keeping the campaign current
 
 The email texts name specific people who have been executed. When the situation
-changes, those texts go stale and the campaign loses force. Review
-`assets/js/data/campaign.js` regularly, and verify names and details against a
+changes, those texts go stale and the campaign loses force. Review the files in
+`assets/js/data/issues/` regularly, and verify names and details against a
 reliable source before adding them.
+
+Recipients go stale too. After an election, check every address in the affected
+country's file under `assets/js/data/countries/` against the parliament's own
+website — MPs who have left keep their seat in our list otherwise.
+
+**Everything known to be unfinished is listed in section 12**, including which
+addresses have never been checked and which campaign facts need rechecking before
+another country goes live. Read it before starting any of this work.
+
+---
+
+## 12. Open items and decisions, for later
+
+Nothing here is broken. These are things that are **deliberately unfinished**,
+recorded so they are not forgotten and nobody has to rediscover them. Each says
+what it is, why it is still open, and which file it lives in.
+
+### 12.1 Canada's demand could be sharper — needs a decision
+
+**File:** `assets/js/data/countries/ca.js`, under `demands`.
+
+Canada already did the two things the letters demand of everyone else: it closed
+the Islamic Republic embassy in 2012 and listed the IRGC as a terrorist entity in
+2024. So Canada's wording asks MPs to *hold and enforce* that line instead. That
+works, but it is the weakest of the three countries — versions 2 and 3 read
+"stop the executions, **or** keep the embassy closed", and holding a position has
+less force than threatening a new one.
+
+**The strongest unmet Canadian demand is deporting the regime officials and their
+families who have settled in Canada.** It is a live campaign in the Iranian
+community there, and unlike embassy closure it has *not* been done. Adding it
+would put real teeth back into the Canadian letters.
+
+This was left out on purpose: **it is a political judgement about what the
+campaign demands, and that is the organisers' call, not a technical one.** If you
+want it, it goes into `demands` in `ca.js` — one wording per version.
+
+### 12.2 Quebec MPs are being written to in English
+
+**Files:** `assets/js/data/countries/ca.js` (`languages`), and
+`assets/js/data/issues/executions.js`.
+
+The Bloc Québécois entry writes to five MPs who all sit for Quebec, and they
+currently receive the **English** letter, because no French translation of the
+five letters exists.
+
+To fix it: translate all five letters into French by adding an `fr:` line to
+every `subject` and `body` in `executions.js`, then change `languages` in `ca.js`
+to `['en', 'fr']`. The site does the rest — a "Letter language" dropdown appears
+by itself, and until the French text exists the site simply ignores `fr`, so
+nothing breaks in the meantime.
+
+### 12.3 The Dutch email addresses have never been checked
+
+**File:** `assets/js/data/countries/nl.js`.
+
+All 13 were carried over from the site's first version and have never been
+verified against tweedekamer.nl. They may well all be right — but nobody has
+looked, and a wrong address fails silently.
+
+Two of them look like typos and are **not** — leave them alone:
+
+- `b.eerdmans@` for Joost Eerdmans, who is registered under his formal initial.
+- `j.jaspervandijk@` in the SP list.
+
+By contrast, every Canadian address was read off that MP's own page on
+2026-08-12 and carries a `[VERIFIED]` note.
+
+### 12.4 The United Kingdom and Germany still need recipients
+
+**Files:** `assets/js/data/countries/uk.js`, and a `de.js` that does not exist yet.
+
+`uk.js` is complete except for its `politicians` list, which is why the UK shows
+as "coming soon". Add one entry per party and it goes live by itself. **UK
+addresses end in `@parliament.uk`, not `parl.gc.ca`**, and are usually
+`firstname.lastname@parliament.uk` — but look each one up at
+members.parliament.uk rather than assuming, for the reason in section 2.
+
+Germany has no file at all yet; it is listed in `comingSoon` in
+`assets/js/data/index.js`. **Before writing its `demands`, check the two facts in
+the table below for Germany** — do not assume the Dutch wording transfers.
+
+### 12.5 The demand facts go stale — recheck them
+
+This is the one to re-read before launching any country. What to demand depends
+on facts that change:
+
+| Country | Islamic Republic embassy | IRGC | Checked |
+| --- | --- | --- | --- |
+| Netherlands | Open | Not proscribed by the EU | carried over |
+| Canada | Closed since 2012 | Listed since 2024 | 2026-08-12 |
+| United Kingdom | Open, in London | **Proscribed July 2026** | 2026-08-12 |
+| Germany | not checked | not checked | — |
+
+The UK proscribed the IRGC **one month** before this was written. That is how
+fast this moves. A letter demanding something a country did last month damages
+the campaign's credibility with exactly the MPs who did it, so treat this table
+as part of the campaign texts and review it alongside them.
+
+### 12.6 The Live Action Tracker has no working backend
+
+**File:** `assets/js/config.js`.
+
+The chart says its data "could not be loaded" because the Supabase project it
+points at no longer exists — the address in `config.js` does not resolve. This is
+a known outage, deliberately deferred, **not** a bug in the page.
+
+When it is rebuilt, note that counts are now stored per country *and* issue, as
+`"nl:executions"`, so the Netherlands and Canada keep separate histories.
+`docs/supabase-schema.sql` documents the table.
 
 ---
 
