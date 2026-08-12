@@ -127,25 +127,30 @@ function generate() {
 }
 
 /**
- * Open a phone app link, and fall back to the website if the app is missing.
+ * Open an app link, and fall back to the website if that app is not installed.
  *
- * An app link like googlegmail:// does nothing at all when the app is not
- * installed, and the browser offers no way to ask. The workaround everyone
- * uses: if the app opens, this page goes into the background and the browser
- * fires visibilitychange. If that has not happened shortly after, assume no
- * app and send the visitor to the website instead.
+ * An app link like ms-outlook:// does nothing at all when the app is missing,
+ * and the browser offers no way to ask in advance. So we watch what happens
+ * after clicking:
+ *
+ *   - the app opened      → a phone puts this page in the background
+ *                           (document.hidden), a computer takes the keyboard
+ *                           focus away from it (document.hasFocus() is false,
+ *                           which is also true while the browser is asking
+ *                           "Open Outlook?"). Either way: leave the page alone.
+ *   - nothing happened    → still visible and still focused after the wait, so
+ *                           there is no such app. Send them to the website.
+ *
+ * Both checks are made when the timer fires rather than in an event listener,
+ * because a computer showing the "Open Outlook?" prompt fires no useful event.
  */
-function openAppOrFallBack(appUrl, webUrl) {
+function openAppOrFallBack(appUrl, webUrl, delayMs) {
   const timer = setTimeout(() => {
-    if (!document.hidden) window.location.href = webUrl;
-  }, 1500);
+    if (!document.hidden && document.hasFocus()) window.location.href = webUrl;
+  }, delayMs);
 
-  // The app opened, so this page was backgrounded — cancel the fallback,
+  // Leaving this page for the app also means the fallback must be cancelled,
   // otherwise the visitor returns to find the website loaded on top.
-  const cancel = () => {
-    if (document.hidden) clearTimeout(timer);
-  };
-  document.addEventListener('visibilitychange', cancel, { once: true });
   window.addEventListener('pagehide', () => clearTimeout(timer), { once: true });
 
   window.location.href = appUrl;
@@ -158,7 +163,7 @@ async function openMail(service) {
   }
 
   const politician = findPoliticianByLabel(el.politician.value);
-  const { url, newTab, fallbackUrl } = buildComposeUrl({
+  const { url, newTab, fallbackUrl, fallbackDelayMs } = buildComposeUrl({
     politician,
     subject: currentEmail.subject.nl,
     body: currentEmail.body.nl,
@@ -167,23 +172,24 @@ async function openMail(service) {
   });
 
   // Open the email first; counting must never delay the actual send.
-  // A new tab is only for the desktop web links, so the visitor keeps this
-  // page. A mailto: or a phone app link must NOT open a tab: they hand off to
-  // another app and would otherwise leave an empty tab behind.
+  // A new tab is only for a web link, so the visitor keeps this page. An app
+  // link must NOT open a tab: it hands off to another program and would
+  // otherwise leave an empty tab behind.
   if (newTab) {
     window.open(url, '_blank', 'noopener');
   } else if (fallbackUrl) {
-    openAppOrFallBack(url, fallbackUrl);
+    openAppOrFallBack(url, fallbackUrl, fallbackDelayMs);
   } else {
     window.location.href = url;
   }
 
-  // A mailto: does nothing at all when no mail program is installed, and the
-  // browser gives us no way to detect that, so say what should happen next.
+  // Nothing here can be detected from the page: a mailto: with no mail program
+  // fails silently, and so does an app link for an app that is not installed
+  // (that is what fallbackUrl above is for). So say what should happen next.
   showStatus(
     service === 'device'
       ? 'Opening your mail app. If nothing happened, no mail program is set up on this device — use Gmail, Outlook, or "Copy All to Clipboard" instead.'
-      : `Opening ${MAIL_SERVICES[service]}. Check that the email looks right, then send it.`,
+      : `Opening the ${MAIL_SERVICES[service]} app, or its website if the app is not installed. Check that the email looks right, then send it.`,
     service === 'device' ? 'info' : 'success'
   );
 

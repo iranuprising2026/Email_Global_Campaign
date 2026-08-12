@@ -74,6 +74,49 @@ export function isMobileUserAgent(userAgent) {
   return /iPhone|iPad|iPod|Android/i.test(userAgent);
 }
 
+/** True on iPhone/iPad/iPod. iOS opens apps through their own URL schemes. */
+export function isIosUserAgent(userAgent) {
+  return /iPhone|iPad|iPod/i.test(userAgent);
+}
+
+/** True on Android. Android opens apps through intent: URLs, not schemes. */
+export function isAndroidUserAgent(userAgent) {
+  return /Android/i.test(userAgent);
+}
+
+/**
+ * Android app ids ("package names"). These are what Android matches to decide
+ * which installed app opens the email, so a typo means "app not installed".
+ */
+const ANDROID_PACKAGES = {
+  gmail: 'com.google.android.gm',
+  outlook: 'com.microsoft.office.outlook',
+};
+
+/**
+ * Build an Android intent: URL — the only reliable way to open one *named* app.
+ *
+ * Why not a scheme like googlegmail:// ? Those are iOS-only. Android apps
+ * register for the standard mailto: link instead, and an intent: URL is how a
+ * web page says "open this mailto: with exactly this app". Two things come for
+ * free: Android itself checks whether the app is installed, and
+ * browser_fallback_url tells the browser where to go when it is not.
+ *
+ * The syntax is fussy. Everything before "#Intent;" is the mailto: link, and
+ * the parts after it are separated by semicolons -- which is why every value
+ * inside is percent-encoded (encodeURIComponent turns ";" and "#" into %3B and
+ * %23, so they cannot end a section early).
+ */
+function androidIntentUrl({ service, mailtoUrl, fallbackUrl }) {
+  return (
+    `intent:${mailtoUrl}` +
+    '#Intent;action=android.intent.action.SENDTO' +
+    `;package=${ANDROID_PACKAGES[service]}` +
+    `;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)}` +
+    ';end'
+  );
+}
+
 /**
  * Where the visitor reads their email. These keys are what the buttons pass
  * to buildComposeUrl(); the values are shown to the visitor.
@@ -135,9 +178,19 @@ export function buildMailtoUrl({ politician, subject, body, userAgent }) {
  * Build the link that opens a pre-filled email, for whichever service the
  * visitor picked.
  *
- * Gmail and Outlook open a compose window in a normal browser tab, so they
- * work on any computer even when no mail program is installed. Both accept
- * comma-separated CC addresses.
+ * The rule is the same everywhere, phone or computer: try the installed app
+ * first, and only use the website when the device has no such app. How "try
+ * the app" is spelled differs per platform, and getting that wrong is exactly
+ * the bug this used to have:
+ *
+ *   Android  intent: URL naming the app (see androidIntentUrl). The iOS
+ *            schemes below do NOT work here -- Android never registers them,
+ *            so the link did nothing and every visitor ended up on the mobile
+ *            website, which does not fill the email in. Fixed 2026-08-12.
+ *   iOS      the app's own scheme, googlegmail:/// or ms-outlook://. Verified
+ *            working on real devices -- do not change these.
+ *   Computer ms-outlook:// for Outlook, which desktop Outlook registers. Gmail
+ *            has no desktop app, so Gmail goes straight to the website.
  *
  * @param {object} args
  * @param {object} args.politician An entry from data/politicians.js
@@ -145,11 +198,13 @@ export function buildMailtoUrl({ politician, subject, body, userAgent }) {
  * @param {string} args.body       Dutch email body
  * @param {'gmail'|'outlook'|'device'} args.service Which option was chosen
  * @param {string} args.userAgent  navigator.userAgent
- * @returns {{url: string, newTab: boolean, fallbackUrl: string|null}}
+ * @returns {{url: string, newTab: boolean, fallbackUrl: string|null,
+ *            fallbackDelayMs: number}}
  *          newTab false means "do not navigate away from the page" -- a
  *          mailto: or an app link must not open a tab.
- *          fallbackUrl is set only on phones, where `url` is an app link that
- *          silently does nothing when the app is not installed. See app.js.
+ *          fallbackUrl is the website to use when `url` is an app link and the
+ *          app turns out not to be installed; app links fail silently, so
+ *          app.js waits fallbackDelayMs to find out. See openAppOrFallBack.
  */
 export function buildComposeUrl({ politician, subject, body, service, userAgent }) {
   if (service === 'device') {
@@ -157,10 +212,12 @@ export function buildComposeUrl({ politician, subject, body, service, userAgent 
       url: buildMailtoUrl({ politician, subject, body, userAgent }),
       newTab: false,
       fallbackUrl: null,
+      fallbackDelayMs: 0,
     };
   }
 
   const onPhone = isMobileUserAgent(userAgent);
+  const onAndroid = isAndroidUserAgent(userAgent);
   const to = politician.primary;
   const cc = politician.cc.join(',');
   const q = {
@@ -170,34 +227,71 @@ export function buildComposeUrl({ politician, subject, body, service, userAgent 
     body: encodeURIComponent(body),
   };
 
+  // How long to wait before deciding "the app is not installed". A phone
+  // switches apps instantly; a computer may need seconds to bring a cold
+  // Outlook to the front, and giving up too early would yank the visitor to
+  // the website while their Outlook was still starting.
+  const fallbackDelayMs = onPhone ? 1500 : 4000;
+
   if (service === 'gmail') {
     const web =
       'https://mail.google.com/mail/?view=cm&fs=1' +
       `&to=${q.to}&cc=${q.cc}&su=${q.subject}&body=${q.body}`;
-    // On a phone the https link opens the Gmail *website*, not the app --
-    // Gmail's universal-link handling does not cover the compose URL. The
-    // app's own scheme does open it. Note the three slashes: that is what
-    // the Gmail app registers, not a typo.
-    return onPhone
-      ? {
-          url: `googlegmail:///co?to=${q.to}&cc=${q.cc}&subject=${q.subject}&body=${q.body}`,
-          newTab: false,
+
+    if (onAndroid) {
+      return {
+        url: androidIntentUrl({
+          service,
+          mailtoUrl: buildMailtoUrl({ politician, subject, body, userAgent }),
           fallbackUrl: web,
-        }
-      : { url: web, newTab: true, fallbackUrl: null };
+        }),
+        newTab: false,
+        fallbackUrl: web,
+        fallbackDelayMs,
+      };
+    }
+
+    if (onPhone) {
+      // Note the three slashes: that is what the Gmail iOS app registers, not
+      // a typo. The https link would open the Gmail website instead, because
+      // Gmail's universal links do not cover the compose URL.
+      return {
+        url: `googlegmail:///co?to=${q.to}&cc=${q.cc}&subject=${q.subject}&body=${q.body}`,
+        newTab: false,
+        fallbackUrl: web,
+        fallbackDelayMs,
+      };
+    }
+
+    // No Gmail desktop app exists, so this is the app, in a tab of its own.
+    return { url: web, newTab: true, fallbackUrl: null, fallbackDelayMs: 0 };
   }
 
   if (service === 'outlook') {
     const web =
       'https://outlook.live.com/mail/0/deeplink/compose?' +
       `to=${q.to}&cc=${q.cc}&subject=${q.subject}&body=${q.body}`;
-    return onPhone
-      ? {
-          url: `ms-outlook://compose?to=${q.to}&cc=${q.cc}&subject=${q.subject}&body=${q.body}`,
-          newTab: false,
+
+    if (onAndroid) {
+      return {
+        url: androidIntentUrl({
+          service,
+          mailtoUrl: buildMailtoUrl({ politician, subject, body, userAgent }),
           fallbackUrl: web,
-        }
-      : { url: web, newTab: true, fallbackUrl: null };
+        }),
+        newTab: false,
+        fallbackUrl: web,
+        fallbackDelayMs,
+      };
+    }
+
+    // iOS and every computer: the Outlook app's own scheme, website as backup.
+    return {
+      url: `ms-outlook://compose?to=${q.to}&cc=${q.cc}&subject=${q.subject}&body=${q.body}`,
+      newTab: false,
+      fallbackUrl: web,
+      fallbackDelayMs,
+    };
   }
 
   throw new Error(`Unknown mail service "${service}".`);

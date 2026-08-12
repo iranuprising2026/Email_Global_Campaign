@@ -155,9 +155,10 @@ The site should look exactly like the live one.
 - [ ] Pick a politician, press **Generate Email Content** — Dutch text and the
       English translation both appear.
 - [ ] The English translation actually matches the Dutch.
-- [ ] Press **Open Email (PC/Outlook)** — your mail app opens with To, CC,
-      subject and body filled in.
-- [ ] Try it on a **phone** too, using the Mobile button and the Gmail app.
+- [ ] Press **Open Email**, then the choice matching how you read your mail —
+      that app opens with To, CC, subject and body filled in.
+- [ ] Try it on a **phone** too, both Android and iPhone if you can. Each
+      choice must open the *app*, not that app's website.
 - [ ] The Live Action Tracker at the bottom draws its bars.
 - [ ] Leave the name field empty — the email is signed with the anonymous
       signature and there is no stray blank line at the end.
@@ -539,10 +540,24 @@ project is still active, and look at the Console (F12) for the reason.
 
 ### The email opens with an empty To field
 
-This is a difference between mail apps, not a bug in the text. Use the button
-that matches the device: **PC/Outlook** on a computer, **Mobile/Gmail** on a
-phone. On mobile, Gmail is reliable and Outlook Mobile is known to mishandle
-these links. As a fallback, **Copy All to Clipboard** always works.
+This is a difference between mail apps, not a bug in the text. Outlook Mobile is
+known to mishandle these links; Gmail is reliable. As a fallback, **Copy the
+email and paste it yourself** always works.
+
+### A website opened instead of the app
+
+That is the built-in safety net, and it means the device decided the app is not
+installed. The page tries the app first and only opens the website when the app
+does not answer — no browser can ask "is this app installed?" in advance, so
+the page clicks the app and waits a moment to see what happens (1.5 seconds on
+a phone, 4 on a computer).
+
+If the app *is* installed and the website still wins:
+
+- On a computer, a prompt like **"Open Microsoft Outlook?"** may be waiting for
+  a click. Allowing it once (tick "always allow") makes it instant afterwards.
+- The app may simply have been slow to start. Press the button again.
+- Either way, **Copy the email and paste it yourself** always works.
 
 ---
 

@@ -135,6 +135,15 @@ modules and `buildEmail`/`buildMailtoUrl` produce byte-identical output across
 every politician × version × input × device combination. Not committed; recreate
 in the scratchpad when needed.
 
+**Test `buildComposeUrl` per platform** — the harness written on 2026-08-12 (not
+committed; recreate in the scratchpad). It imports `email.js` from a path in
+`EMAIL_MODULE` so the same file can be run against `git show HEAD:...` to prove a
+bug exists before fixing it, and asserts, for Android/iOS/Windows/macOS UAs: the
+URL shape per service, `newTab`/`fallbackUrl`/`fallbackDelayMs`, that the
+`intent:` payload round-trips to `buildMailtoUrl` output with no raw `;`/`#`, and
+that subject, body, To and both CCs survive encoding. Uses a subject and body
+containing `;`, `#` and `&` on purpose.
+
 **Mining the command log.** A `PostToolUse` hook appends every Bash command run
 here to `.claude/command-log.txt` as `timestamp<TAB>command` (newlines escaped by
 `@tsv`, so one line per command). When curating the section above, read that file
@@ -147,6 +156,27 @@ Note: `gh` is **not** installed on this machine.
 
 ## Gotchas
 
+- **App links are per-platform; there is no "mobile" case.** `googlegmail:///co`
+  and `ms-outlook://compose` are **iOS** schemes. Android registers neither, so
+  the link silently did nothing and every Android visitor got the mobile website
+  (which ignores Gmail's `view=cm` compose params) — the 2026-08-12 bug report.
+  Android must use an `intent:` URL: `ACTION_SENDTO` + `package=` +
+  `S.browser_fallback_url`. Packages: `com.google.android.gm`,
+  `com.microsoft.office.outlook`. Desktop Outlook registers `ms-outlook://`, so
+  desktop now takes the same path as iOS.
+- **`intent:` URL syntax is brittle.** Everything between `intent:` and
+  `#Intent;` is the `mailto:` data; `;` separates the parts after it and
+  `Intent.parseUri` splits on the **last** `#`. So any `;` or `#` inside the
+  data must be percent-encoded — `encodeURIComponent` does both, which is why
+  `buildMailtoUrl`'s output can be embedded verbatim. Never hand-build the data
+  with raw punctuation.
+- **Detecting "app not installed" needs `document.hasFocus()`, not just
+  `document.hidden`.** On a phone the app backgrounds the page (`hidden`), but on
+  a computer the browser's "Open Outlook?" prompt fires **no event** and the page
+  stays visible — it only loses focus. `openAppOrFallBack` therefore checks both
+  when the timer fires rather than listening for `visibilitychange`. Desktop also
+  waits 4s, not 1.5s: a cold Outlook can take longer to steal focus, and firing
+  early would drag the visitor to the website mid-launch.
 - **`mailto:` quirks in `email.js` are deliberate.** The To address is repeated
   as a `to=` parameter because some clients drop the one in the path; the CC
   separator switches between `;` (desktop Outlook) and `,` (mobile Gmail). Built
@@ -250,6 +280,12 @@ Unverified — confirm before relying on, and update this section once known:
   **Inter needs no such question** — OFL-1.1, notice shipped at
   `assets/fonts/Inter-LICENSE.txt`. That file must stay: the OFL requires the
   notice to travel with the files, and this repo serves them publicly.
+- **The 2026-08-12 app-link fix is verified by URL shape only.** The Android
+  `intent:` URLs and the desktop `ms-outlook://` attempt pass the test harness
+  above, but nothing has been clicked on a real Android phone or Windows PC —
+  this machine has neither. iOS was reported working before the change and its
+  URLs are unchanged. Ask the user for a real-device result before treating any
+  of it as confirmed.
 - **Email addresses in `data/politicians.js` were carried over verbatim** and have
   not been checked against tweedekamer.nl. Two look odd but are intentional:
   `b.eerdmans@` for Joost Eerdmans (formal initial) and
@@ -352,6 +388,15 @@ prune anything superseded.
   `assets/fonts/Inter-LICENSE.txt`; the OFL requires it to stay with the files.
   `assets/fonts/README.md` now documents both faces. User states an IRANSans
   licence is held but the document was not accessible — see **Open questions**.
+- **2026-08-12** — Mail buttons reworked around "try the installed app, fall back
+  to the website" on every platform, from a user bug report: Android Gmail and
+  Outlook both landed on the website with an empty compose window, and desktop
+  Outlook never tried the app at all. Root cause was one class of mistake —
+  `isMobileUserAgent` treated Android like iOS and reused the iOS-only URL
+  schemes. Now: Android gets `intent:` URLs, desktop Outlook gets
+  `ms-outlook://` with the web link as fallback, iOS untouched. `buildComposeUrl`
+  gained `fallbackDelayMs`; `openAppOrFallBack` now also checks
+  `document.hasFocus()`. See the three new **Gotchas** bullets.
 - **2026-08-03** — Added the Bash-logging `PostToolUse` hook (see **Commands**).
   **Deliberately did not add a `Stop` hook** to nag about updating this file:
   `prompt`/`agent` hook types only work on tool events, so a Stop reminder must be
