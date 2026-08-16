@@ -91,25 +91,27 @@ export default {
    *
    * Double quotes are used where the text contains an apostrophe -- inside
    * single quotes an apostrophe would break the file.
+   * UPDATED by Iranuprising2026, August 16, 2026
    */
-  demands: {
-    default: {
-      en: "Canada must keep the Islamic Republic embassy closed and refuse any reopening, expel the IRGC operatives and regime agents active on Canadian soil, and enforce the IRGC's terrorist listing with prosecutions and asset seizures",
-    },
-    'Version 2': {
-      en: 'keep the embassy closed and relations severed, expel the IRGC operatives and regime agents still active in Canada, and seize their assets under the terrorist listing Canada has already made',
-    },
-    'Version 3': {
-      en: "refuse any reopening of the Islamic Republic embassy and use the IRGC's terrorist listing to expel its operatives and seize their assets",
-    },
-    // A noun phrase: the letter reads "... measures must follow, including [DEMANDS]".
-    'Version 4': {
-      en: "keeping the embassy closed, expelling the regime's agents and IRGC operatives, and enforcing the IRGC's terrorist listing with prosecutions and asset seizures",
-    },
-    'Version 5': {
-      en: "the embassy must stay closed, the IRGC's operatives in Canada must be expelled, and their assets seized under the listing Canada has already adopted",
-    },
+   
+demands: {
+  default: {
+    en: "Canada must impose targeted sanctions on those responsible for the executions and death sentences, fully enforce the IRGC's terrorist listing through investigations and prosecutions, dismantle regime-linked networks operating in Canada, seize their assets, and lead an international effort to stop the executions",
   },
+  'Version 2': {
+    en: "impose targeted sanctions on those responsible for the executions and death sentences, fully enforce the IRGC's terrorist listing by investigating and prosecuting its operatives and regime-linked networks in Canada, seizing their assets, and coordinating with allies to demand an immediate halt to executions",
+  },
+  'Version 3': {
+    en: "Canada must impose targeted sanctions on the officials responsible for the executions, enforce the IRGC terrorist designation through investigations and prosecutions, dismantle its networks and other regime-linked networks in Canada, seize their assets, and mobilize allies to demand an immediate end to the executions",
+  },
+  // A noun phrase: the letter reads "... measures must follow, including [DEMANDS]".
+  'Version 4': {
+    en: "imposing targeted sanctions on those responsible for the executions and death sentences, fully enforcing the IRGC's terrorist listing through investigations and prosecutions, dismantling regime-linked networks in Canada, seizing their assets, and leading coordinated international action to halt the executions",
+  },
+  'Version 5': {
+    en: "Canada must impose targeted sanctions on those responsible for the executions and death sentences, enforce the IRGC's terrorist listing through prosecutions and asset seizures, dismantle regime-linked networks operating in Canada, and work with its allies to impose coordinated consequences unless the executions stop",
+  },
+},
 
   /**
    * Who the letters can be sent to. Each entry is one option in the
