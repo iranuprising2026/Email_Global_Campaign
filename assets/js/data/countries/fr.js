@@ -87,7 +87,7 @@ export default {
     },
 
     'Version 3': {
-      fr: "fermer l'ambassade de la République islamique à Paris et saisir les avoirs du CGRI",
+      fr: "fermera l'ambassade de la République islamique à Paris et saisira les avoirs du CGRI",
       en: 'close the Islamic Republic embassy in Paris and seize IRGC assets',
     },
 
