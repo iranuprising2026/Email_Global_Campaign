@@ -60,61 +60,61 @@ export default {
   /** Heading shown above the form, and the label in the "Issue" dropdown. */
   title: 'Stop Daily Executions Campaign',
 
-  versions: [
-        {
-          id: 'Version 1',
-          subject: {
-            nl: 'URGENT: Ultimatum vereist om staatsslachting in Iran te stoppen',
-            en: 'URGENT: Ultimatum required to stop the state-led slaughter in Iran',
-          },
-          body: {
-            nl: 'Geachte [NAME],\n\nMet de start van de nieuwe militaire operatie heeft het regime in Iran opnieuw een golf van executies gelanceerd. De meest recente slachtoffers zijn de 18-jarige Erfan Esfandiari, de 23-jarige van Afghaanse afkomst Gol-Mohammad Mohammadi en de 26-jarige Mehdi Khanaki. Tientallen anderen zijn door schijnprocessen en zogenaamde rechtbanken zonder eerlijk proces ter dood veroordeeld.\n\nVrijblijvende diplomatie werkt niet. Wij eisen dat u [GOVERNMENT] oproept tot een direct ultimatum: stop de executies onmiddellijk, anders moeten [DEMANDS].\n\nMet vriendelijke groet,\n[USER]\n[CITY]',
-            en: 'Dear [NAME],\n\nWith the start of the new military operation, the regime in Iran has once again launched a wave of executions. The latest victims include 18-year-old Erfan Esfandiari, 23-year-old Gol-Mohammad Mohammadi of Afghan descent, and 26-year-old Mehdi Khanaki. Dozens more people are being sentenced to death by kangaroo courts without fair trials.\n\nVague diplomacy is not enough. We urge you to demand an immediate ultimatum from [GOVERNMENT]: if the executions do not stop, [DEMANDS].\n\nKind regards,\n[USER]\n[CITY]',
-          },
-        },
-        {
-          id: 'Version 2',
-          subject: {
-            nl: 'Stop de executies in Iran: Sluit de ambassade en bevries IRGC-tegoeden',
-            en: 'Stop the executions in Iran: Close the embassy and freeze IRGC assets',
-          },
-          body: {
-            nl: 'Geachte [NAME],\n\nNa de start van de nieuwe militaire operatie heeft de Islamitische Republiek haar executiemachine opnieuw geactiveerd. Jonge Iraniërs zoals de 18-jarige Erfan Esfandiari, de 23-jarige Gol-Mohammad Mohammadi en de 26-jarige Mehdi Khanaki zijn geëxecuteerd. Ondertussen worden tientallen anderen in kangaroo-rechtbanken zonder eerlijk proces ter dood veroordeeld.\n\nWij accepteren geen woorden meer. [COUNTRY] moet een duidelijk ultimatum stellen: beëindig de executies nu, of [DEMANDS].\n\nMet vriendelijke groet,\n[USER]\n[CITY]',
-            en: 'Dear [NAME],\n\nFollowing the beginning of the new military operation, the Islamic Republic has restarted its execution campaign. Young Iranians including 18-year-old Erfan Esfandiari, 23-year-old Gol-Mohammad Mohammadi, and 26-year-old Mehdi Khanaki have been executed. Meanwhile, dozens more are being sentenced to death in kangaroo courts without fair trials.\n\nWe no longer accept empty words. [COUNTRY] must issue a clear ultimatum: stop the executions now, or [DEMANDS].\n\nKind regards,\n[USER]\n[CITY]',
-          },
-        },
-        {
-          id: 'Version 3',
-          subject: {
-            nl: 'Actie vereist: Beëindig de psychologische oorlog en executies in Iran',
-            en: 'Action required: End the psychological war and executions in Iran',
-          },
-          body: {
-            nl: 'Geachte [NAME],\n\nDe nieuwe militaire operatie van het regime in Iran heeft opnieuw geleid tot een golf van executies en doodvonnissen. De recente executies van Erfan Esfandiari (18), Gol-Mohammad Mohammadi (23, van Afghaanse afkomst) en Mehdi Khanaki (26) tonen aan dat het regime doorgaat met het vermoorden van jonge mensen. Tientallen anderen wachten op de doodstraf na processen zonder enige vorm van rechtspraak.\n\n[COUNTRY] moet een grens trekken. Wij eisen concrete actie: stop de executies onmiddellijk, [DEMANDS].\n\nMet vriendelijke groet,\n[USER]\n[CITY]',
-            en: 'Dear [NAME],\n\nThe regime’s new military operation has been followed by another wave of executions and death sentences in Iran. The recent executions of Erfan Esfandiari (18), Gol-Mohammad Mohammadi (23, of Afghan descent), and Mehdi Khanaki (26) demonstrate that the regime continues to kill young people. Dozens more face execution after sham trials with no due process.\n\n[COUNTRY] must draw a line. We demand immediate action: stop the executions, or [DEMANDS].\n\nKind regards,\n[USER]\n[CITY]',
-          },
-        },
-        {
-          id: 'Version 4',
-          subject: {
-            nl: 'Ultimatum voor de Islamitische Republiek: Stop de moorden of vertrek',
-            en: 'Ultimatum for the Islamic Republic: Stop the killings or face departure',
-          },
-          body: {
-            nl: 'Geachte [NAME],\n\nHet Iraanse regime gebruikt executies opnieuw als wapen van terreur na de start van zijn nieuwe militaire operatie. De executies van de 18-jarige Erfan Esfandiari, de 23-jarige Gol-Mohammad Mohammadi en de 26-jarige Mehdi Khanaki zijn slechts de meest recente voorbeelden. Tientallen mensen worden door schijnrechtbanken zonder eerlijk proces naar de dood gestuurd.\n\nStel een krachtig ultimatum: de executies moeten stoppen, anders moeten diplomatieke maatregelen volgen, waaronder [DEMANDS].\n\nMet vriendelijke groet,\n[USER]\n[CITY]',
-            en: 'Dear [NAME],\n\nThe Iranian regime is once again using executions as a weapon of terror following the launch of its new military operation. The executions of 18-year-old Erfan Esfandiari, 23-year-old Gol-Mohammad Mohammadi, and 26-year-old Mehdi Khanaki are only the latest examples. Dozens of others are being sent to their deaths through sham courts without fair trials.\n\nSet a firm ultimatum: the executions must stop, or diplomatic measures must follow, including [DEMANDS].\n\nKind regards,\n[USER]\n[CITY]',
-          },
-        },
-        {
-          id: 'Version 5',
-          subject: {
-            nl: 'Executiecrisis: Eis voor onmiddellijke sluiting van de Iraanse ambassade',
-            en: 'Execution Crisis: Demand for immediate closure of the Iranian embassy',
-          },
-          body: {
-            nl: 'Geachte [NAME],\n\nTerwijl de wereld toekijkt, hervat de Islamitische Republiek haar campagne van executies na de start van de nieuwe militaire operatie. Erfan Esfandiari (18), Gol-Mohammad Mohammadi (23) en Mehdi Khanaki (26) behoren tot de nieuwste slachtoffers. Daarnaast worden tientallen anderen ter dood veroordeeld door rechtbanken die geen echte rechtsgang bieden.\n\nWij vragen u om namens [COUNTRY] een duidelijk ultimatum te eisen. Als deze executies doorgaan, moeten [DEMANDS].\n\nMet vriendelijke groet,\n[USER]\n[CITY]',
-            en: 'Dear [NAME],\n\nWhile the world watches, the Islamic Republic has resumed its campaign of executions after launching its new military operation. Erfan Esfandiari (18), Gol-Mohammad Mohammadi (23), and Mehdi Khanaki (26) are among the latest victims. At the same time, dozens more are being sentenced to death by courts that provide no genuine justice.\n\nWe ask you to demand a clear ultimatum on behalf of [COUNTRY]. If these executions continue, [DEMANDS].\n\nKind regards,\n[USER]\n[CITY]',
-          },
-        },
-      ],
-};
+  /** Texts updated by IranUprising2026 on August 16 2026 */
+versions: [
+  {
+    id: 'Version 1',
+    subject: {
+      nl: 'URGENT: Ultimatum vereist om staatsslachting in Iran te stoppen',
+      en: 'URGENT: Ultimatum required to stop the state-led slaughter in Iran',
+    },
+    body: {
+      nl: 'Geachte [NAME],\n\nDe Islamitische Republiek zet haar executiecampagne tegen Iraanse demonstranten voort. Na de executies van onder anderen Erfan Esfandiari (18), Gol-Mohammad Mohammadi (23) en Mehdi Khanaki (26), werden op 28 juli Abolfazl Sepahi Badjani en Amirhossein Safari Hosseinabadi publiekelijk geëxecuteerd in Isfahan. Ondanks dat mensen zich hadden verzameld om de executies te stoppen, werden zij door veiligheidstroepen uiteengedreven. Een derde veroordeelde, Alireza Sepahi, kreeg naar verluidt een hartaanval tijdens zijn overbrenging naar de executieplaats.\n\nTientallen andere demonstranten blijven ter dood veroordeeld. Vrijblijvende diplomatie werkt niet. Wij eisen dat u [GOVERNMENT] oproept tot een direct ultimatum: stop de executies onmiddellijk, anders moeten [DEMANDS].\n\nMet vriendelijke groet,\n[USER]\n[CITY]',
+      en: 'Dear [NAME],\n\nThe Islamic Republic continues its execution campaign against Iranian protesters. Following the executions of, among others, Erfan Esfandiari (18), Gol-Mohammad Mohammadi (23), and Mehdi Khanaki (26), Abolfazl Sepahi Badjani and Amirhossein Safari Hosseinabadi were publicly executed in Isfahan on July 28. Despite people gathering in an attempt to stop the executions, they were dispersed by security forces. A third defendant, Alireza Sepahi, reportedly suffered a heart attack while being transferred to the execution site.\n\nDozens of other protesters remain sentenced to death. Vague diplomacy is not enough. We demand that you urge [GOVERNMENT] to issue an immediate ultimatum: stop the executions immediately, or [DEMANDS].\n\nKind regards,\n[USER]\n[CITY]',
+    },
+  },
+  {
+    id: 'Version 2',
+    subject: {
+      nl: 'Stop de executies in Iran: Sluit de ambassade en bevries IRGC-tegoeden',
+      en: 'Stop the executions in Iran: Close the embassy and freeze IRGC assets',
+    },
+    body: {
+      nl: 'Geachte [NAME],\n\nDe executies van Iraanse demonstranten gaan door. Erfan Esfandiari (18), Gol-Mohammad Mohammadi (23) en Mehdi Khanaki (26) behoren tot de slachtoffers van deze executiecampagne. Op 28 juli werden Abolfazl Sepahi Badjani en Amirhossein Safari Hosseinabadi publiekelijk opgehangen in Isfahan, terwijl burgers zich hadden verzameld om te proberen de executies tegen te houden. Een andere ter dood veroordeelde, Alireza Sepahi, kreeg naar verluidt een hartaanval tijdens zijn overbrenging naar de executieplaats.\n\nTientallen anderen lopen nog steeds het risico te worden geëxecuteerd. Wij accepteren geen woorden meer. [COUNTRY] moet een duidelijk ultimatum stellen: beëindig de executies nu, of [DEMANDS].\n\nMet vriendelijke groet,\n[USER]\n[CITY]',
+      en: 'Dear [NAME],\n\nThe executions of Iranian protesters continue. Erfan Esfandiari (18), Gol-Mohammad Mohammadi (23), and Mehdi Khanaki (26) are among the victims of this execution campaign. On July 28, Abolfazl Sepahi Badjani and Amirhossein Safari Hosseinabadi were publicly hanged in Isfahan while civilians had gathered in an attempt to stop the executions. Another condemned prisoner, Alireza Sepahi, reportedly suffered a heart attack while being transferred to the execution site.\n\nDozens of others remain at risk of execution. We no longer accept empty words. [COUNTRY] must issue a clear ultimatum: end the executions now, or [DEMANDS].\n\nKind regards,\n[USER]\n[CITY]',
+    },
+  },
+  {
+    id: 'Version 3',
+    subject: {
+      nl: 'Actie vereist: Beëindig de psychologische oorlog en executies in Iran',
+      en: 'Action required: End the psychological war and executions in Iran',
+    },
+    body: {
+      nl: 'Geachte [NAME],\n\nDe executies in Iran zijn een instrument van terreur tegen demonstranten geworden. Erfan Esfandiari (18), Gol-Mohammad Mohammadi (23) en Mehdi Khanaki (26) zijn geëxecuteerd, gevolgd door de openbare executies van Abolfazl Sepahi Badjani en Amirhossein Safari Hosseinabadi in Isfahan op 28 juli. Mensen die zich daar hadden verzameld om hun dood te voorkomen, werden door veiligheidstroepen uiteengedreven. Alireza Sepahi, die eveneens ter dood was veroordeeld, kreeg naar verluidt een hartaanval tijdens zijn overbrenging.\n\nTientallen anderen wachten nog op hun executie. [COUNTRY] moet een grens trekken. Wij eisen concrete actie: stop de executies onmiddellijk, [DEMANDS].\n\nMet vriendelijke groet,\n[USER]\n[CITY]',
+      en: 'Dear [NAME],\n\nExecutions in Iran have become an instrument of terror against protesters. Erfan Esfandiari (18), Gol-Mohammad Mohammadi (23), and Mehdi Khanaki (26) were executed, followed by the public executions of Abolfazl Sepahi Badjani and Amirhossein Safari Hosseinabadi in Isfahan on July 28. People who gathered there in an attempt to prevent their deaths were dispersed by security forces. Alireza Sepahi, who was also sentenced to death, reportedly suffered a heart attack while being transferred.\n\nDozens of others still await execution. [COUNTRY] must draw a line. We demand concrete action: stop the executions immediately, [DEMANDS].\n\nKind regards,\n[USER]\n[CITY]',
+    },
+  },
+  {
+    id: 'Version 4',
+    subject: {
+      nl: 'Ultimatum voor de Islamitische Republiek: Stop de moorden of vertrek',
+      en: 'Ultimatum for the Islamic Republic: Stop the killings or face departure',
+    },
+    body: {
+      nl: 'Geachte [NAME],\n\nDe Islamitische Republiek gebruikt de doodstraf opnieuw als middel om verzet in Iran te onderdrukken. De executies van Erfan Esfandiari (18), Gol-Mohammad Mohammadi (23) en Mehdi Khanaki (26) werden gevolgd door de openbare executie van Abolfazl Sepahi Badjani en Amirhossein Safari Hosseinabadi in Isfahan. Zelfs de mensen die zich bij de executieplaats verzamelden om hen te beschermen, werden door veiligheidstroepen uiteengedreven. Een derde veroordeelde, Alireza Sepahi, kreeg naar verluidt een hartaanval voordat zijn executie kon plaatsvinden.\n\nTientallen andere demonstranten blijven ter dood veroordeeld. Stel een krachtig ultimatum: de executies moeten stoppen, anders moeten diplomatieke maatregelen volgen, waaronder [DEMANDS].\n\nMet vriendelijke groet,\n[USER]\n[CITY]',
+      en: 'Dear [NAME],\n\nThe Islamic Republic is once again using the death penalty to suppress dissent in Iran. The executions of Erfan Esfandiari (18), Gol-Mohammad Mohammadi (23), and Mehdi Khanaki (26) were followed by the public executions of Abolfazl Sepahi Badjani and Amirhossein Safari Hosseinabadi in Isfahan. Even people who gathered at the execution site to protect them were dispersed by security forces. A third condemned prisoner, Alireza Sepahi, reportedly suffered a heart attack before his execution could take place.\n\nDozens of other protesters remain sentenced to death. Set a firm ultimatum: the executions must stop, or diplomatic measures must follow, including [DEMANDS].\n\nKind regards,\n[USER]\n[CITY]',
+    },
+  },
+  {
+    id: 'Version 5',
+    subject: {
+      nl: 'Executiecrisis: Eis voor onmiddellijke sluiting van de Iraanse ambassade',
+      en: 'Execution Crisis: Demand for immediate closure of the Iranian embassy',
+    },
+    body: {
+      nl: 'Geachte [NAME],\n\nDe omvang van de executiecrisis in Iran blijft toenemen. Onder de reeds geëxecuteerde demonstranten bevinden zich Erfan Esfandiari (18), Gol-Mohammad Mohammadi (23) en Mehdi Khanaki (26). Op 28 juli werden vervolgens Abolfazl Sepahi Badjani en Amirhossein Safari Hosseinabadi publiekelijk geëxecuteerd in Isfahan, terwijl een menigte zich had verzameld om tegen hun executies te protesteren. Alireza Sepahi, die eveneens ter dood was veroordeeld, kreeg naar verluidt een hartaanval tijdens zijn overbrenging naar de executieplaats.\n\nTientallen anderen verkeren nog steeds in levensgevaar. Wij vragen u om namens [COUNTRY] een duidelijk ultimatum te eisen. Als deze executies doorgaan, moeten [DEMANDS].\n\nMet vriendelijke groet,\n[USER]\n[CITY]',
+      en: 'Dear [NAME],\n\nThe execution crisis in Iran continues to escalate. Among the protesters already executed are Erfan Esfandiari (18), Gol-Mohammad Mohammadi (23), and Mehdi Khanaki (26). On July 28, Abolfazl Sepahi Badjani and Amirhossein Safari Hosseinabadi were then publicly executed in Isfahan while a crowd had gathered to protest and try to prevent their executions. Alireza Sepahi, who had also been sentenced to death, reportedly suffered a heart attack while being transferred to the execution site.\n\nDozens of others remain in danger of execution. We ask you to demand a clear ultimatum on behalf of [COUNTRY]. If these executions continue, [DEMANDS].\n\nKind regards,\n[USER]\n[CITY]',
+    },
+  },
+],
