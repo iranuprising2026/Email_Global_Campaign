@@ -24,6 +24,7 @@ import ca from './countries/ca.js';
 import uk from './countries/uk.js';
 import de from './countries/de.js';
 import se from './countries/se.js';
+import fr from './countries/fr.js';
 import executions from './issues/executions.js';
 
 /**
@@ -33,7 +34,7 @@ import executions from './issues/executions.js';
  * recipients yet is shown greyed out as "coming soon" until its `politicians`
  * list is filled in. The United Kingdom is in that state.
  */
-export const countries = [nl, ca, uk, de, se];
+export const countries = [nl, ca, uk, de, se, fr];
 
 /**
  * Countries we intend to add but have not written a file for yet.
