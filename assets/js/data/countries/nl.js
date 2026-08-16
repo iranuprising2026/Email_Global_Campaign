@@ -88,7 +88,7 @@ export default {
       en: 'close the embassy, expel diplomats, and immediately freeze all IRGC assets',
     },
     'Version 3': {
-      nl: 'sluit anders de ambassade van de Islamitische Republiek en bevries alle IRGC-bezittingen',
+      nl: 'sluit de ambassade van de Islamitische Republiek en bevries alle IRGC-bezittingen',
       en: 'close the Islamic Republic embassy and freeze all IRGC assets',
     },
     // A noun phrase: the letter reads "... maatregelen volgen, waaronder [DEMANDS]".
