@@ -23,7 +23,7 @@ import nl from './countries/nl.js';
 import ca from './countries/ca.js';
 import uk from './countries/uk.js';
 import de from './countries/de.js';
-import de from './countries/se.js';
+import se from './countries/se.js';
 import executions from './issues/executions.js';
 
 /**
