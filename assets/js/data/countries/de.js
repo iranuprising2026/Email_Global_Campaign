@@ -123,5 +123,56 @@ anonymousSignature: {
    * Please verify addresses against tweedekamer.nl before adding them.
    * Sending to a wrong address wastes a supporter's effort.
    */
-  politicians: []
+ politicians: [
+  {
+    name: 'Jens Spahn',
+    party: 'CDU/CSU',
+    primary: 'jens.spahn@bundestag.de',
+    cc: [
+      'juergen.hardt@bundestag.de',
+      'norbert.roettgen@bundestag.de',
+      'alexander.hoffmann@bundestag.de',
+    ],
+  },
+  {
+    name: 'Matthias Miersch',
+    party: 'SPD',
+    primary: 'matthias.miersch@bundestag.de',
+    cc: [
+      'nils.schmid@bundestag.de',
+      'adis.ahmetovic@bundestag.de',
+      'siemtje.moeller@bundestag.de',
+    ],
+  },
+  {
+    name: 'Alice Weidel',
+    party: 'AfD',
+    primary: 'alice.weidel@bundestag.de',
+    cc: [
+      'tino.chrupalla@bundestag.de',
+      'markus.frohnmaier@bundestag.de',
+      'bernd.baumann@bundestag.de',
+    ],
+  },
+  {
+    name: 'Katharina Dröge',
+    party: 'Bündnis 90/Die Grünen',
+    primary: 'katharina.droege@bundestag.de',
+    cc: [
+      'deborah.duering@bundestag.de',
+      'omid.nouripour@bundestag.de',
+      'britta.hasselmann@bundestag.de',
+    ],
+  },
+  {
+    name: 'Heidi Reichinnek',
+    party: 'Die Linke',
+    primary: 'heidi.reichinnek@bundestag.de',
+    cc: [
+      'soeren.pellmann@bundestag.de',
+      'desiree.becker@bundestag.de',
+      'janine.wissler@bundestag.de',
+    ],
+  },
+],
 };
