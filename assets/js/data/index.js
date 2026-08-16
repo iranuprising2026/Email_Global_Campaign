@@ -22,6 +22,7 @@
 import nl from './countries/nl.js';
 import ca from './countries/ca.js';
 import uk from './countries/uk.js';
+import de from './countries/de.js';
 import executions from './issues/executions.js';
 
 /**
@@ -31,7 +32,7 @@ import executions from './issues/executions.js';
  * recipients yet is shown greyed out as "coming soon" until its `politicians`
  * list is filled in. The United Kingdom is in that state.
  */
-export const countries = [nl, ca, uk];
+export const countries = [nl, ca, uk, de];
 
 /**
  * Countries we intend to add but have not written a file for yet.
@@ -43,9 +44,7 @@ export const countries = [nl, ca, uk];
  * this list and add it to `countries` above instead -- otherwise it would be
  * listed twice.
  */
-export const comingSoon = [
-  { id: 'de', name: 'Germany' },
-];
+export const comingSoon = [];
 
 /** Every issue, in dropdown order. */
 export const issues = [executions];
