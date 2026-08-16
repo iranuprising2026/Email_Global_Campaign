@@ -97,5 +97,79 @@ export default {
    *   },
    *   ----------------------------------
    */
-  politicians: [],
+  politicians: [
+  {
+    name: 'Andy Burnham',
+    party: 'Labour',
+    primary: 'andy.burnham.mp@parliament.uk',
+    cc: [
+      'ed.miliband.mp@parliament.uk',
+      'thornberrye@parliament.uk',
+      'uma.kumaran.mp@parliament.uk',
+      'alex.ballinger.mp@parliament.uk',
+    ],
+  },
+  {
+    name: 'Kemi Badenoch',
+    party: 'Conservative',
+    primary: 'kemi.badenoch.mp@parliament.uk',
+    cc: [
+      'withammp@parliament.uk',
+      'john.whittingdale.mp@parliament.uk',
+      'aphra.brandreth.mp@parliament.uk',
+      'james.cleverly.mp@parliament.uk',
+    ],
+  },
+  {
+    name: 'Nigel Farage',
+    party: 'Reform UK',
+    primary: 'nigel.farage.mp@parliament.uk',
+    cc: [
+      'richard.tice.mp@parliament.uk',
+      'andrew.rosindell.mp@parliament.uk',
+      'lee.anderson.mp@parliament.uk',
+      'robert.jenrick.mp@parliament.uk',
+    ],
+  },
+  {
+    name: 'Ed Davey',
+    party: 'Liberal Democrats',
+    primary: 'edward.davey.mp@parliament.uk',
+    cc: [
+      'calum.miller.mp@parliament.uk',
+      'richard.foord.mp@parliament.uk',
+      'edward.morello.mp@parliament.uk',
+    ],
+  },
+  {
+    name: 'Siân Berry',
+    party: 'Green Party',
+    primary: 'sian.berry.mp@parliament.uk',
+    cc: [
+      'ellie.chowns.mp@parliament.uk',
+      'carla.denyer.mp@parliament.uk',
+      'adrian.ramsay.mp@parliament.uk',
+    ],
+  },
+  {
+    name: 'Dave Doogan',
+    party: 'SNP',
+    primary: 'dave.doogan.mp@parliament.uk',
+    cc: [
+      'brendan.ohara.mp@parliament.uk',
+      'chris.law.mp@parliament.uk',
+      'kirsty.blackman.mp@parliament.uk',
+      'graham.leadbitter.mp@parliament.uk',
+    ],
+  },
+  {
+    name: 'Liz Saville Roberts',
+    party: 'Plaid Cymru',
+    primary: 'liz.savilleroberts.mp@parliament.uk',
+    cc: [
+      'ben.lake.mp@parliament.uk',
+      'llinos.medi.mp@parliament.uk',
+    ],
+  },
+],
 };
