@@ -72,6 +72,48 @@ export async function recordAction({ politicianLabel, versionId, actionType, cam
 }
 
 /**
+ * Count the actions recorded under each of several topics, e.g. one per
+ * country, so the tracker can show how the countries compare.
+ *
+ * This asks the database for a handful of numbers rather than downloading
+ * every country's rows and counting them here: `head: true` returns the count
+ * with no rows attached at all. The tracker therefore costs the same whether
+ * the campaign has sent ten emails or ten million.
+ *
+ * One query per topic. That is a few small parallel requests instead of one
+ * big one, and it needs no extra database setup -- important, because the
+ * person maintaining this site is not expected to write SQL.
+ *
+ * @param {string[]} topics e.g. ['nl:executions', 'ca:executions']
+ * @returns {Promise<Object<string, number>|null>} counts keyed by topic, or
+ *          null if they could not be loaded.
+ */
+export async function fetchTopicTotals(topics) {
+  if (!client) return null;
+
+  try {
+    const counted = await Promise.all(
+      topics.map(async (topic) => {
+        const { count, error } = await client
+          .from(STATS_TABLE)
+          .select('*', { count: 'exact', head: true })
+          .eq('topic', topic);
+
+        // Thrown rather than returned: one unreadable country makes the whole
+        // comparison wrong, so the caller should show its "could not load"
+        // message instead of a chart with a silently missing bar.
+        if (error) throw new Error(error.message);
+        return [topic, count ?? 0];
+      })
+    );
+    return Object.fromEntries(counted);
+  } catch (e) {
+    console.error('Could not load the per-country totals:', e.message);
+    return null;
+  }
+}
+
+/**
  * Fetch every recorded action for a campaign.
  *
  * @returns {Promise<Array<{politician_name: string, version_name: string}>|null>}

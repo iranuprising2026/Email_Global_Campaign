@@ -472,7 +472,6 @@ textarea:focus-visible {
   margin-top: 30px;
   box-shadow: var(--shadow);
   position: relative;
-  height: 600px;
   width: 100%;
 }
 
@@ -483,11 +482,37 @@ textarea:focus-visible {
   font-size: 18px;
 }
 
+/* The two charts in the card: countries on top, politicians underneath. */
+.tracker__panel + .tracker__panel {
+  margin-top: 26px;
+  border-top: 1px solid var(--color-border);
+  padding-top: 18px;
+}
+
+.tracker__subheading {
+  text-align: center;
+  margin: 0 0 10px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
 /*
-  Chart.js manages this canvas; keep it at a plain 100% of the card, as the
-  original did. (A blank chart is not caused by these two lines — see the
+  Chart.js needs a parent with a real height to measure against, because the
+  charts run with maintainAspectRatio:false. The card no longer has one fixed
+  height — tracker.js sets each wrapper's height from the number of bars it is
+  about to draw, so six countries and thirteen politicians both get room
+  without either being squashed. Any height here is only the fallback used
+  before the first draw. (A blank chart is not caused by these rules — see the
   window-load comment in app.js.)
 */
+.tracker__canvas {
+  position: relative;
+  height: 300px;
+}
+
+#country-chart,
 #stats-chart {
   width: 100% !important;
   height: 100% !important;

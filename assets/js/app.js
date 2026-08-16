@@ -55,8 +55,14 @@ const el = {
   openDevice: document.getElementById('open-device'),
   copyAll: document.getElementById('copy-all'),
   status: document.getElementById('status'),
-  chart: document.getElementById('stats-chart'),
-  chartNote: document.getElementById('chart-note'),
+  // The Live Action Tracker card. tracker.js owns everything inside it.
+  countryCanvas: document.getElementById('country-chart'),
+  politicianCanvas: document.getElementById('stats-chart'),
+  trackerNote: document.getElementById('tracker-note'),
+  politicianNote: document.getElementById('politician-note'),
+  countryPanel: document.getElementById('country-panel'),
+  politicianPanel: document.getElementById('politician-panel'),
+  politicianHeading: document.getElementById('politician-chart-heading'),
 };
 
 /** The email currently shown in the preview, or null before Generate. */
@@ -440,8 +446,26 @@ async function copyAll() {
   refreshTracker();
 }
 
+/**
+ * Redraw both tracker charts for whatever is currently selected.
+ *
+ * Called on every country change, issue change and recorded action, which is
+ * what makes the chart follow the Country dropdown.
+ */
 function refreshTracker() {
-  renderTracker(country, issue, el.chart, el.chartNote);
+  renderTracker({
+    country,
+    issue,
+    elements: {
+      countryCanvas: el.countryCanvas,
+      politicianCanvas: el.politicianCanvas,
+      note: el.trackerNote,
+      politicianNote: el.politicianNote,
+      countryPanel: el.countryPanel,
+      politicianPanel: el.politicianPanel,
+      politicianHeading: el.politicianHeading,
+    },
+  });
 }
 
 function init() {

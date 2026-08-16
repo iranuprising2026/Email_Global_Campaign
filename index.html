@@ -32,7 +32,7 @@
       get the new file instead of a cached copy. This trick only works for this
       one file — see "My change isn't showing up" in README.md for JavaScript.
     -->
-    <link rel="stylesheet" href="assets/css/styles.css?v=13">
+    <link rel="stylesheet" href="assets/css/styles.css?v=14">
 </head>
 
 <body>
@@ -196,8 +196,29 @@
     <!-- Live Action Tracker -->
     <section class="tracker" aria-label="Live Action Tracker">
         <h2 class="tracker__heading">Live Action Tracker</h2>
-        <p id="chart-note" class="tracker__note" hidden></p>
-        <canvas id="stats-chart"></canvas>
+
+        <!-- Shown instead of both charts when there is nothing to draw, or
+             when the counts could not be loaded. -->
+        <p id="tracker-note" class="tracker__note" hidden></p>
+
+        <!-- Which countries are pulling their weight. The country the visitor
+             is currently on is the gold bar. -->
+        <div class="tracker__panel" id="country-panel" hidden>
+            <h3 class="tracker__subheading">Emails sent by country</h3>
+            <div class="tracker__canvas">
+                <canvas id="country-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- Who has been contacted inside that one country. The heading is
+             rewritten by app.js whenever the country changes. -->
+        <div class="tracker__panel" id="politician-panel" hidden>
+            <h3 class="tracker__subheading" id="politician-chart-heading">Who has been contacted</h3>
+            <p id="politician-note" class="tracker__note" hidden></p>
+            <div class="tracker__canvas">
+                <canvas id="stats-chart"></canvas>
+            </div>
+        </div>
     </section>
 
     <script type="module" src="assets/js/app.js"></script>

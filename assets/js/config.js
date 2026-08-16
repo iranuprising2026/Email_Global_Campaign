@@ -15,8 +15,8 @@
  * Never put a `service_role` key in this file. That key bypasses all security
  * rules and would let anyone delete the campaign statistics.
  */
-export const SUPABASE_URL = 'https://jjplszhxhwliimzpqwyc.supabase.co';
-export const SUPABASE_ANON_KEY = 'sb_publishable_UDllYN6zVMFDI6P8Fy3SCQ_YD50E_bs';
+export const SUPABASE_URL = 'https://wazrgvwqotgdpmaphldt.supabase.co';
+export const SUPABASE_ANON_KEY = 'sb_publishable_UHHkZewi_ZjDN6KMbznKgw_p-0SOOVx';
 
 /** Table that stores one row per email sent or copied. */
 export const STATS_TABLE = 'email_stats';

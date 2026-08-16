@@ -67,23 +67,37 @@ assets/fonts/               Inter .woff2 (2 latin subsets) for en/nl + IRANSans
 assets/js/
   config.js                 Supabase creds, STATS_TABLE, DEFAULT_COUNTRY_ID,
                             DEFAULT_ISSUE_ID.
-  data/index.js           ← Registry: countries[], comingSoon[], issues[], lookups,
-                            politicianLabel, isSendable/sendableCountries/
-                            unavailableCountries, issuesForLanguage.
+  data/index.js           ← Registry: countries[], comingSoon[] (empty), issues[],
+                            LANGUAGE_NAMES/languageName, lookups, politicianLabel,
+                            isSendable/sendableCountries/unavailableCountries,
+                            issuesForLanguage, languagesForCountry.
   data/countries/nl.js    ← NL: id, name, languages[], terms, anonymousSignature,
-                            politicians[] {name, party, primary, cc[]}. 13 entries.
-  data/countries/ca.js    ← Canada, en only. 5 entries, one per party (Liberal,
+                            demands{}, politicians[] {name, party, primary, cc[]}.
+                            13 entries, 4 addresses each.
+  data/countries/ca.js    ← Canada, en. 5 entries, one per party (Liberal,
                             Conservative, NDP, Bloc Québécois, Green). Every
                             address [VERIFIED 2026-08-12] off ourcommons.ca.
-  data/countries/uk.js    ← UK, en only. terms + demands written; `politicians: []`,
-                            so it stays greyed out as "coming soon".
-                            Addresses go to @parliament.uk, not parl.gc.ca.
+                            demands rewritten 2026-08-16 (sanctions/enforcement).
+  data/countries/uk.js    ← UK, en. 7 entries (Labour, Conservative, Reform UK,
+                            Lib Dem, Green, SNP, Plaid Cymru). @parliament.uk,
+                            not parl.gc.ca. Addresses UNVERIFIED.
+  data/countries/de.js    ← Germany, de. 5 entries (CDU/CSU, SPD, AfD, Grüne,
+                            Linke) @bundestag.de. Addresses UNVERIFIED.
+  data/countries/se.js    ← Sweden, sv. 6 entries (S, SD, M, C, V, KD)
+                            @riksdagen.se. Addresses UNVERIFIED.
+  data/countries/fr.js    ← France, fr. 7 entries (RN, EPR, LFI-NFP, PS, DR, E&S,
+                            Horizons) @assemblee-nationale.fr. UNVERIFIED.
   data/issues/executions.js ← Email texts. versions[] → {subject,body} keyed by
-                            language (nl, en).
+                            language. 12 languages since 2026-08-16: nl en de fr
+                            it es sv no da pl fi pt.
   email.js                  PURE. Exports buildEmail, buildMailtoUrl,
                             formatForClipboard, isMobileUserAgent.
   stats.js                  Supabase read/write. Never throws by design.
-  tracker.js                Chart.js stacked bar. Holds VERSION_COLORS.
+                            fetchActions (rows for one topic) + fetchTopicTotals
+                            (head-only counts, one query per country).
+  tracker.js                TWO Chart.js charts in one card: countries, then
+                            that country's politicians. Holds VERSION_COLORS,
+                            COUNTRY_BAR_COLOR, trackerTopic, renderTracker.
   app.js                    The ONLY file that touches the DOM.
 docs/supabase-schema.sql    Table + RLS policies (reconstructed, see Open questions).
 README.md                   Non-technical maintainer guide.
@@ -127,6 +141,84 @@ for f in assets/js/*.js assets/js/data/*.js assets/js/data/*/*.js; do cp "$f" /t
 
 ```bash
 node --input-type=module -e "const m = await import('./assets/js/email.js'); console.log(Object.keys(m))"
+```
+
+**Smoke-test every letter after a data change** — builds every country ×
+language × version × recipient (215 on 2026-08-16) and fails on a throw or a
+leftover `[PLACEHOLDER]`. Catches a missing `demands` entry, a country listing a
+language the letters lack, and a half-translated version:
+
+```bash
+node --input-type=module -e "
+const d = await import('./assets/js/data/index.js');
+const e = await import('./assets/js/email.js');
+let n = 0; const errs = [];
+for (const c of d.countries)
+  for (const language of d.languagesForCountry(c))
+    for (const v of d.issues[0].versions)
+      for (const p of c.politicians) {
+        try {
+          const r = e.buildEmail({country: c, issue: d.issues[0], versionId: v.id, politician: p, language, userName: '', city: ''});
+          const t = r.body.sent + r.body.en + r.subject.sent + r.subject.en;
+          if (/\[[A-Z]+\]/.test(t)) errs.push(c.id + ' ' + v.id + ' leftover placeholder');
+          n++;
+        } catch (err) { errs.push(c.id + ' ' + language + ' ' + v.id + ': ' + err.message); }
+      }
+console.log('combos:', n, 'errors:', errs.length); console.log([...new Set(errs)].join('\n'));
+"
+```
+
+Note `buildEmail` takes **`versionId`** (a string), not a version object, and
+returns `{subject: {sent, en}, body: {sent, en}, …}` — passing the object or
+reading `r.body` as a string are both easy mistakes that make the harness lie.
+
+**Drive a real browser over CDP** — the only reliable way to verify the tracker,
+because `--virtual-time-budget` lies about it (see **Gotchas**). Start Chrome
+with a debugging port, then talk to it from Node using the built-in `WebSocket`:
+
+```bash
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless \
+  --disable-gpu --no-sandbox --remote-debugging-port=9333 \
+  --user-data-dir=<scratch>/chrome-profile &
+curl -s http://127.0.0.1:9333/json/version | jq -r .Browser   # confirm it is up
+```
+
+Then in a `.mjs` file: `PUT /json/new` for a tab, connect to
+`webSocketDebuggerUrl`, `Page.enable` + `Runtime.enable` + `Page.navigate`, and
+poll `Runtime.evaluate` in **real** time (`await sleep(500)` in a loop) until
+`window.Chart.getChart(document.getElementById('country-chart'))` exists. From
+there: read chart data for assertions, `dispatchEvent(new Event('change'))` on
+`#country` to exercise a country switch, and `Page.captureScreenshot` with
+`clip` from a `getBoundingClientRect()` to photograph one card. Written fresh
+each time in the scratchpad; not committed. Two things that cost time:
+`navigator.clipboard.writeText` rejects in headless even after
+`Browser.grantPermissions` (no focused document), so test the write path through
+the **Gmail** button with `window.open` stubbed, not "Copy All"; and screenshots
+need `captureBeyondViewport: true` or you get the viewport only.
+
+**Talk to the Supabase Management API** (project `wazrgvwqotgdpmaphldt`). Needs a
+personal access token, which is **not** stored in this repo — ask the user, keep
+it in the scratchpad, and read it as `$(cat …)` so the value never reaches
+`.claude/command-log.txt`:
+
+```bash
+curl -s -H "Authorization: Bearer $(cat <scratch>/pat)" \
+  https://api.supabase.com/v1/projects | jq '[.[] | {id, name, region, status}]'
+# run SQL (jq -Rs builds the JSON so quoting in the .sql file cannot break it):
+jq -Rs '{query: .}' docs/supabase-schema.sql > <scratch>/payload.json
+curl -s -X POST -H "Authorization: Bearer $(cat <scratch>/pat)" \
+  -H "Content-Type: application/json" --data @<scratch>/payload.json \
+  https://api.supabase.com/v1/projects/<ref>/database/query | jq .
+```
+
+**Check the site's own database access as a visitor sees it** — the publishable
+key, straight at PostgREST. Confirms RLS rather than assuming it:
+
+```bash
+KEY=sb_publishable_UHHkZewi_ZjDN6KMbznKgw_p-0SOOVx
+URL=https://wazrgvwqotgdpmaphldt.supabase.co
+curl -s -I "$URL/rest/v1/email_stats?select=*&topic=eq.nl:executions" \
+  -H "apikey: $KEY" -H "Prefer: count=exact" -H "Range: 0-0" | grep -i content-range
 ```
 
 **Load the real page headlessly** and dump the rendered DOM:
@@ -219,6 +311,18 @@ Note: `gh` is **not** installed on this machine.
   five colours; the list wraps, so a 6th version silently reuses the first).
   Any new bar colour must be **light** — the chart card is `--color-surface`
   navy, and `blue-800 #1b3a6b` is 1.45 against it, i.e. invisible.
+- **The instruction cards and the form number their steps differently
+  (2026-08-16).** Both cards were renumbered 1–7 to include Country and Issue,
+  but the form's own `field-label`s still read "1. Enter Your Details", "2.
+  Choose the Politician", "3. Choose an Email Version". So the card's step 5 is
+  the field labelled 3. Left as-is deliberately; if it is ever fixed, the
+  English and Persian cards must change together (constraint 4).
+- **The country files carry copy-paste comments that contradict their own
+  data.** `de.js` tells the editor to verify addresses "against tweedekamer.nl"
+  and its header reads "The Germany."; `fr.js` says "We are leaving this empty
+  for now. France will therefore remain 'Coming soon'" above seven populated
+  entries. Harmless to the site, misleading to the non-technical collaborator
+  the comments exist for — fix them when next in those files.
 - **Adding a country or an issue touches exactly two places:** the new file in
   `data/countries/` or `data/issues/`, and its `import` + list entry in
   `data/index.js`. Nothing else — `isSendable()` decides on its own when a
@@ -230,16 +334,33 @@ Note: `gh` is **not** installed on this machine.
   a disabled "— coming soon" option. This exists because Canada *has* English
   letters — a letters-only check would have shown it as live with an empty
   recipient dropdown and a working Generate button. `comingSoon[]` in
-  `data/index.js` covers countries with no file at all (DE only now; UK has a
-  file with an empty `politicians`, so it is greyed out by `isSendable` instead
-  — a country must never be in both lists or it appears twice).
+  `data/index.js` covers countries with no file at all — a country must never be
+  in both lists or it appears twice.
+- **Since 2026-08-16 every country is sendable and `comingSoon[]` is empty,** so
+  `unavailableCountries()` returns nothing and the disabled-option path is no
+  longer exercised by the live site. Do not delete it as dead code: the next
+  country added lands there until its `politicians` list is filled. Verify that
+  path in a scratch copy (see **Commands**), not by reading the live page.
 - **`resolveSelection()` must reject a non-sendable country,** not just an
-  unknown one. `getCountry('ca')` returns a real object today; without the
-  `isSendable` guard, `?country=ca` would open a page that cannot send.
+  unknown one. `getCountry()` returns a real object for a half-finished country;
+  without the `isSendable` guard, `?country=xx` would open a page that cannot send.
+- **A language is offered only if EVERY version has it.** `issuesForLanguage()`
+  requires `subject[lang]` and `body[lang]` on all five versions, so one missing
+  translation drops that language for the whole country — silently, with no
+  error. Add a language to all five versions or to none.
+- **`LANGUAGE_NAMES` in `data/index.js` is a separate list from the letter
+  translations, and they already disagree.** `executions.js` carries Finnish
+  (`fi`); `LANGUAGE_NAMES` does not, so `languageName('fi')` falls back to the
+  raw code. Harmless today (no country lists `fi`), but adding Finland would put
+  "fi" in the Letter language dropdown. Add the name in the same edit that adds
+  the country.
 - **`[DEMANDS]` is per country AND per version, and both halves are load-bearing.**
-  Per country because the demand is not true everywhere: NL and the UK still have
-  an Islamic Republic embassy, Canada closed its one in 2012 and listed the IRGC
-  in 2024, the UK proscribed the IRGC in July 2026. Per version because the five
+  Per country because the demand is not true everywhere: NL, DE, SE, FR and the
+  UK still have an Islamic Republic embassy, Canada closed its one in 2012 and
+  listed the IRGC in 2024 — which is why Canada's wording asks for targeted
+  sanctions and enforcement instead (rewritten 2026-08-16), while DE/SE/FR ask
+  for closure of the embassy in Berlin/Stockholm/Paris and an IRGC asset freeze.
+  The UK proscribed the IRGC in July 2026. Per version because the five
   letters vary the wording deliberately (anti-bulk-mail) and the grammar around
   the placeholder differs — Version 4 reads "including [DEMANDS]" and needs a
   noun phrase where Version 1 needs a full clause. A single string per country
@@ -263,15 +384,19 @@ Note: `gh` is **not** installed on this machine.
   splits its stats too.
 - **`stats.js` swallows errors on purpose.** A failed count must never block a
   supporter from sending. Do not make it throw.
-- **The Supabase host in `config.js` does not exist (2026-08-03).**
-  `jjplszhxhwliimzpqwyc.supabase.co` returns NXDOMAIN from every resolver, so
-  every read and write fails. That is why the tracker shows "could not be loaded"
-  — it is a dead backend, **not** a bug in the refactor. Before debugging the
-  tracker, always check DNS first:
+- **The backend was replaced on 2026-08-16** and the tracker works again. Project
+  `wazrgvwqotgdpmaphldt` ("Email tracker", `eu-west-3`), created by the user;
+  Claude ran `docs/supabase-schema.sql` into it through the Management API. The
+  old `jjplszhxhwliimzpqwyc` is gone for good and **all counts before that date
+  are lost with it** — the table started empty. If the tracker ever goes quiet
+  again, check DNS before anything else:
   `curl -s "https://dns.google/resolve?name=<ref>.supabase.co&type=A"`
-  (`"Status":3` = the project is gone). The pre-refactor `index.html` had the same
-  failure but a bare `catch` that logged and returned, so it silently painted
-  nothing — the new error note is the refactor surfacing a pre-existing outage.
+  (`"Status":3` = the project no longer exists).
+- **`UPDATE` and `DELETE` as `anon` return 204, not an error.** With no policy
+  granting them, RLS makes the rows invisible to the statement, so it succeeds
+  against zero rows. Verified 2026-08-16 — the row was neither changed nor
+  removed. Do not read a 204 as "the security is missing"; check the row
+  afterwards, which is what the test did.
 - **When injecting a test `<script>` via `node -e '...'`,** shell single-quoting
   turns `\n` into a literal newline and breaks the JS string. Write the injector
   to a `.mjs` file instead of inlining it.
@@ -286,6 +411,23 @@ Note: `gh` is **not** installed on this machine.
   disabled-button colour fix shipped with the version still at the value from
   before it, so a browser that had the page open could keep showing the old
   colours through a normal refresh. The user reported this as "not working."
+- **The tracker card is two charts, and `renderTracker` owns both.** Signature is
+  `renderTracker({country, issue, elements})` — an object, not positional args.
+  `app.js` passes the seven nodes; everything inside the card is tracker.js's.
+  Adding a third chart means adding to `elements`, not a new entry point.
+- **Chart.js clips a long y-axis label instead of shortening it.** "Yves-François
+  Blanchet (Bloc Québécois)" ran off the canvas on a 390px phone and rendered as
+  "s Blanchet (Bloc Québécois)" — the *start* of the name silently gone, which
+  reads as a data error rather than a layout one. Fixed with a `ticks.callback`
+  that truncates to the third of the chart width Chart.js allows the axis, and
+  appends "…". `data.labels` is left alone so tooltips keep the full name — and
+  because those labels are the tracker's database key.
+- **Each canvas needs a parent with a real height, set from the bar count.**
+  `maintainAspectRatio: false` measures the parent, and the card no longer has
+  one fixed height: six countries and thirteen Dutch politicians need different
+  room, and Canada's five would be stretched by either. `tracker.js` sets
+  `canvas.parentElement.style.height` before constructing each chart. The
+  `.tracker__canvas` height in the CSS is only the pre-first-draw fallback.
 - **The tracker chart must be created on `window.load`, not at module execution.**
   `app.js` runs as soon as the DOM is parsed, which is too early for Chart.js: it
   measures the canvas before layout is final, constructs the chart **without any
@@ -293,13 +435,16 @@ Note: `gh` is **not** installed on this machine.
   2026-08-03. It is not the markup and not the canvas CSS (a variant using the
   original's exact `div.chart-container` markup was pixel-identical to the broken
   one). Never move `refreshTracker()` back into the synchronous part of `init()`.
-- **Verifying charts in headless Chrome needs care.** `--virtual-time-budget`
-  fast-forwards timers while real network stays pending, so probes sample at
-  t≈0 and report a blank page even when the code is fine. Two false "verified"
-  claims came from this. What works: serve a deliberately slow image so the load
-  event is delayed, then `--screenshot` the full page and *look* at it. Asserting
-  on DOM attributes (`canvas[width]`, `note.hidden`) is unreliable — `hidden` is
-  also the initial state, so absence of an error proves nothing.
+- **`--virtual-time-budget` cannot verify this page. Use CDP.** Confirmed again
+  2026-08-16: with a live backend and a 40s budget, both a `--screenshot` and a
+  polling in-page probe reported "no chart" while the page was in fact perfect.
+  Virtual time fast-forwards the probe's own `setTimeout` loop to exhaustion
+  while the real Supabase fetch is still in flight, so it always samples at
+  t≈0. Three false negatives have now come from this flag. **Drive a real
+  Chrome over the DevTools Protocol instead** — see **Commands**. Node 24 has a
+  global `WebSocket`, so the driver needs no packages. Prefer reading the live
+  `Chart.getChart(canvas).data` over DOM attributes: it is positive evidence,
+  where `note.hidden` is also the initial state and so proves nothing.
 - **The theme is dark (since 2026-08-11). Three traps follow from that.**
   - **Gold `--color-brand #c9a84c` always needs dark text on it** (7.93 with
     `--color-bg`). As text on any light ground it is 2.29 and fails everything.
@@ -335,10 +480,12 @@ Unverified — confirm before relying on, and update this section once known:
 
 - **GitHub Pages source.** Assumed `main` / `/root`. Never confirmed (`gh` is not
   installed, repo settings unread).
-- **`docs/supabase-schema.sql` is reconstructed** from how `stats.js` uses the
-  table, not exported from the live project. The real table's columns and RLS
-  policies have not been inspected. In particular, confirm no `UPDATE`/`DELETE`
-  policy exists for `anon`.
+- ~~`docs/supabase-schema.sql` is reconstructed~~ **Settled 2026-08-16.** The
+  live table was created *by running that file*, so it is now the source of
+  truth rather than a guess. Columns, the topic index, RLS on, and exactly two
+  policies (`anon` insert, `anon` select) were read back from
+  `information_schema` and `pg_policies` and match. No `UPDATE`/`DELETE` policy
+  exists. Keep the file and the table in step from here.
 - **`LICENSE` is MIT by default**, chosen by Claude, not requested by the user.
   Note it covers the code, **not** the bundled fonts.
 - **IRANSans licence document is not filed here (2026-08-11).** The user states a
@@ -360,12 +507,30 @@ Unverified — confirm before relying on, and update this section once known:
   each MP's own page at ourcommons.ca; `gary.anand@parl.gc.ca` is correct as the
   user's Ministers PDF had it, and the pattern-derived
   `gary.anandasangaree@` was wrong. Nothing in `ca.js` is guesswork.
-- **The UK's two campaign facts need re-checking before it launches.** Verified
-  2026-08-12 by web search: Iran's embassy at 16 Princes Gate London is open with
-  an ambassador in post since June 2025, and the UK proscribed the IRGC in July
-  2026 — one month before, so this ages fast. `uk.js` demands depend on both.
-- **Germany's embassy/IRGC status has NOT been checked.** Do it before writing
-  `de.js` demands; do not assume the Dutch wording transfers.
+- **The UK's two campaign facts were verified 2026-08-12 and the UK went live
+  2026-08-16 without a re-check.** Iran's embassy at 16 Princes Gate London is
+  open with an ambassador in post since June 2025, and the UK proscribed the
+  IRGC in July 2026 — one month before, so this ages fast. `uk.js` demands
+  depend on both.
+- **Germany's, Sweden's and France's embassy/IRGC facts have NOT been checked,
+  yet all three are live (2026-08-16).** Their `demands` all assert an open
+  Islamic Republic embassy in Berlin / Stockholm / Paris and unfrozen IRGC
+  assets, written by analogy to the Dutch wording. Verify before treating the
+  letters as accurate; if one is wrong, the letters demand something already
+  done, which is exactly the failure Canada's rewrite avoids.
+- **The 108 addresses added 2026-08-16 (uk.js 31, de.js 20, se.js 30, fr.js 27
+  unique) are UNVERIFIED.** None carries a `[VERIFIED]` marker and none was
+  checked here; they arrived with the user's commits. They follow each
+  parliament's usual pattern (`firstname.lastname.mp@parliament.uk`,
+  `firstname.lastname@bundestag.de` / `@riksdagen.se` /
+  `@assemblee-nationale.fr`), and a pattern-derived address fails silently —
+  see the `parl.gc.ca` gotcha. With the 52 Dutch ones, 160 of the site's 184
+  addresses are unverified; only Canada's 24 have been checked.
+- **The 12-language letter set (2026-08-16) has not been reviewed for
+  translation accuracy.** All 60 subject/body pairs build without error and no
+  placeholder is left unreplaced (215 combinations checked), but that is a
+  mechanical check. Constraint 4 binds every one of the 12 to the English:
+  nobody here has read the Finnish, Polish or Portuguese against it.
 - **The MP List PDF lists 339 MPs, not the full 343 seats.** Confirmed with the
   stream filter widened to every text stream: Liberal 172, Conservative 139,
   Bloc Québécois 21, NDP 5, Green 1, Independent 1. Whether the 4 missing are
@@ -510,6 +675,41 @@ prune anything superseded.
   marked `[DERIVED]` for their verification pass. Deliberately excluded: the
   Persian role notes accompanying the Toronto list, which contain personal
   remarks about named MPs and would have been published publicly.
+- **2026-08-16** — Campaign expanded to **six live countries** and **12
+  languages**, in commits by the user (Iranuprising2026), not by Claude. New:
+  `de.js`, `se.js`, `fr.js`; `uk.js` got its 7 recipients so it went live by
+  itself via `isSendable()`; `comingSoon[]` is now empty. `executions.js`
+  letters were rewritten around the 28 July Isfahan public executions (Abolfazl
+  Sepahi Badjani, Amirhossein Safari Hosseinabadi, Alireza Sepahi) and
+  translated into de fr it es sv no da pl fi pt alongside nl/en. Canada's
+  `demands` were rewritten from "hold the closed embassy" to targeted sanctions
+  + IRGC-listing enforcement + dismantling regime networks — which closes README
+  12.1 in spirit, though deportation was still left out. Both instruction cards
+  renumbered to 7 steps. Reviewed here, nothing changed: 215 country × language
+  × version × recipient combinations build with no error and no unreplaced
+  placeholder; every module still parses. What did **not** happen: address
+  verification (122 new addresses, none marked `[VERIFIED]`), embassy/IRGC fact
+  checks for DE/SE/FR, and any review of the ten new translations — all three
+  are in **Open questions** and README §12.
+- **2026-08-16** — Live Action Tracker rebuilt and given a working backend.
+  New Supabase project `wazrgvwqotgdpmaphldt` (`eu-west-3`), schema applied from
+  `docs/supabase-schema.sql`; the pre-existing counts are gone with the old
+  project. The card is now **two charts**: countries least-first with the
+  selected one in gold, then that country's politicians as before. New
+  `fetchTopicTotals` asks for head-only counts (one query per country, no rows
+  transferred) so the comparison costs the same at any campaign size.
+  `renderTracker` took over the whole card, including its notes, and switched
+  to an object argument. Verified over CDP against the live database: correct
+  ordering and gold highlight for nl/ca/se, the politician chart following the
+  dropdown, per-bar-count canvas heights, all four states (data, this-country-
+  empty, nothing-anywhere, backend-down), no horizontal overflow at 390px, and
+  a full round trip — clicking Gmail wrote the expected row and redrew the card
+  from the empty state without a reload. **Requirement "switch the graph when
+  the country changes" needed no code**: it was already wired through
+  `applySelection`, just never observable against a dead backend. One real bug
+  found and fixed on the way: Chart.js was clipping long politician names on a
+  phone. Deliberately not built: clicking a country bar to switch country — the
+  dropdown already does it.
 - **2026-08-03** — Added the Bash-logging `PostToolUse` hook (see **Commands**).
   **Deliberately did not add a `Stop` hook** to nag about updating this file:
   `prompt`/`agent` hook types only work on tool events, so a Stop reminder must be
