@@ -73,8 +73,15 @@ export function getIssue(id) {
 export const LANGUAGE_NAMES = {
   nl: 'Dutch',
   en: 'English',
-  fr: 'French',
   de: 'German',
+  fr: 'French',
+  it: 'Italian',
+  sv: 'Swedish',
+  es: 'Spanish',
+  no: 'Norwegian',
+  da: 'Danish',
+  pl: 'Polish',
+  pt: 'Portuguese',
 };
 
 /** The name of a language, falling back to its code if it is not listed. */
