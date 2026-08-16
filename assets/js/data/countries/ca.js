@@ -102,7 +102,7 @@ demands: {
     en: "impose targeted sanctions on those responsible for the executions and death sentences, fully enforce the IRGC's terrorist listing by investigating and prosecuting its operatives and regime-linked networks in Canada, seizing their assets, and coordinating with allies to demand an immediate halt to executions",
   },
   'Version 3': {
-    en: "Canada will impose targeted sanctions on the officials responsible for the executions, enforce the IRGC terrorist designation through investigations and prosecutions, dismantle its networks and other regime-linked networks in Canada, seize their assets, and mobilize allies to demand an immediate end to the executions",
+    en: "impose targeted sanctions on the officials responsible for the executions, enforce the IRGC terrorist designation through investigations and prosecutions, dismantle its networks and other regime-linked networks in Canada, seize their assets, and mobilize allies to demand an immediate end to the executions",
   },
   // A noun phrase: the letter reads "... measures must follow, including [DEMANDS]".
   'Version 4': {
