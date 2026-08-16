@@ -94,7 +94,7 @@ export default {
     },
 
     'Version 3': {
-      sv: 'stäng den Islamiska republikens ambassad i Stockholm och frys IRGC:s tillgångar',
+      sv: 'stänga den Islamiska republikens ambassad i Stockholm och frysa IRGC:s tillgångar',
       en: 'close the Islamic Republic embassy in Stockholm and freeze IRGC assets',
     },
 
