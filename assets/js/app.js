@@ -139,10 +139,18 @@ function populateForSelection() {
     }))
   );
 
-  fillSelect(
-    el.version,
-    issue.versions.map((v) => ({ value: v.id, text: v.id }))
-  );
+fillSelect(
+  el.version,
+  issue.versions.map((v) => ({ value: v.id, text: v.id }))
+);
+
+// Randomly select one email version for each page load/selection.
+const randomVersion =
+  issue.versions[Math.floor(Math.random() * issue.versions.length)];
+
+if (randomVersion) {
+  el.version.value = randomVersion.id;
+}
 
   // Say which language the letter is in, since it is no longer always Dutch.
   const name = languageName(language);
