@@ -184,8 +184,14 @@ body {
   background: var(--color-brand);
 }
 
+.masthead__flags {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .masthead__flag {
-  width: 90px;
+  width: 45px;
   height: auto;
   display: block;
 }
