@@ -148,7 +148,7 @@ body {
 .masthead__title {
   margin: 0;
   color: var(--color-brand);
-  font-size: clamp(2.25rem, 9vw, 3.25rem);
+  font-size: clamp(2rem, 7.5vw, 2.8rem);
   font-weight: 700;
   letter-spacing: -0.01em;
   line-height: 1.1;
@@ -161,6 +161,33 @@ body {
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+}
+
+.masthead__campaign {
+  margin: 18px 0 10px;
+  color: var(--color-text);
+  font-size: clamp(1rem, 3.5vw, 1.25rem);
+  font-weight: 500;
+}
+
+.masthead__divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 760px;
+  margin: 10px auto 18px;
+}
+
+.masthead__line {
+  flex: 1;
+  height: 2px;
+  background: var(--color-brand);
+}
+
+.masthead__flag {
+  width: 90px;
+  height: auto;
+  display: block;
 }
 
 h2 {
