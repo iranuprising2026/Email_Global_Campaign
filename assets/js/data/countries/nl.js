@@ -119,137 +119,172 @@ export default {
    * Please verify addresses against tweedekamer.nl before adding them.
    * Sending to a wrong address wastes a supporter's effort.
    */
-  politicians: [
-    {
-      name: 'Caspar Veldkamp',
-      party: 'NSC',
-      primary: 'c.veldkamp@tweedekamer.nl',
-      cc: [
-        'p.omtzigt@tweedekamer.nl',
-        'n.vandenhil@tweedekamer.nl',
-        'info@partijnieuwsociaalcontract.nl',
-      ],
-    },
-    {
-      name: 'Ruben Brekelmans',
-      party: 'VVD',
-      primary: 'r.brekelmans@tweedekamer.nl',
-      cc: [
-        'd.yesilgoz@tweedekamer.nl',
-        's.erkens@tweedekamer.nl',
-        'info@vvd.nl',
-      ],
-    },
-    {
-      name: 'Jan Paternotte',
-      party: 'D66',
-      primary: 'j.paternotte@tweedekamer.nl',
-      cc: [
-        's.sjoerdsma@tweedekamer.nl',
-        'h.hammelburg@tweedekamer.nl',
-        'info@d66.nl',
-      ],
-    },
-    {
-      name: 'Jesse Klaver',
-      party: 'GL-PvdA',
-      primary: 'j.klaver@tweedekamer.nl',
-      cc: [
-        'k.piri@tweedekamer.nl',
-        's.maatoug@tweedekamer.nl',
-        'info@groenlinks.nl',
-      ],
-    },
-    {
-      name: 'Geert Wilders',
-      party: 'PVV',
-      primary: 'g.wilders@tweedekamer.nl',
-      cc: [
-        'm.markuszower@tweedekamer.nl',
-        'r.deroon@tweedekamer.nl',
-        'pvv.publiek@tweedekamer.nl',
-      ],
-    },
-    {
-      name: 'Laurens Dassen',
-      party: 'Volt',
-      primary: 'l.dassen@tweedekamer.nl',
-      cc: [
-        'n.koekkoek@tweedekamer.nl',
-        's.bamenga@tweedekamer.nl',
-        'info@voltnederland.org',
-      ],
-    },
-    {
-      name: 'Henri Bontenbal',
-      party: 'CDA',
-      primary: 'h.bontenbal@tweedekamer.nl',
-      cc: [
-        'd.boswijk@tweedekamer.nl',
-        'p.heerma@tweedekamer.nl',
-        'info@cda.nl',
-      ],
-    },
-    {
-      name: 'Chris Stoffer',
-      party: 'SGP',
-      primary: 'c.stoffer@tweedekamer.nl',
-      cc: [
-        'r.bisschop@tweedekamer.nl',
-        'k.vandermolen@tweedekamer.nl',
-        'info@sgp.nl',
-      ],
-    },
-    {
-      name: 'Mirjam Bikker',
-      party: 'ChristenUnie',
-      primary: 'm.bikker@tweedekamer.nl',
-      cc: [
-        'd.ceder@tweedekamer.nl',
-        'e.vandergraaf@tweedekamer.nl',
-        'info@christenunie.nl',
-      ],
-    },
-    {
-      name: 'Esther Ouwehand',
-      party: 'PvdD',
-      primary: 'esther.ouwehand@tweedekamer.nl',
-      cc: [
-        'c.teunissen@tweedekamer.nl',
-        'f.wassenberg@tweedekamer.nl',
-        'info@partijvdedieren.nl',
-      ],
-    },
-    {
-      name: 'Joost Eerdmans',
-      party: 'JA21',
-      // Registered in the Tweede Kamer under his formal initial (B.), not "J.".
-      primary: 'b.eerdmans@tweedekamer.nl',
-      cc: [
-        's.pouw-verweij@tweedekamer.nl',
-        'j.eppink@tweedekamer.nl',
-        'info@ja21.nl',
-      ],
-    },
-    {
-      name: 'Jimmy Dijk',
-      party: 'SP',
-      primary: 'j.dijk@tweedekamer.nl',
-      cc: [
-        'j.jaspervandijk@tweedekamer.nl',
-        's.beckerman@tweedekamer.nl',
-        'info@sp.nl',
-      ],
-    },
-    {
-      name: 'Lidewij de Vos',
-      party: 'FVD',
-      primary: 'l.dvos@tweedekamer.nl',
-      cc: [
-        't.baudet@tweedekamer.nl',
-        'p.vanmeijeren@tweedekamer.nl',
-        'partij@fvd.nl',
-      ],
-    },
-  ],
+politicians: [
+  {
+    name: 'Jan Paternotte',
+    party: 'D66',
+    primary: 'j.paternotte@tweedekamer.nl',
+    cc: [
+      'a.podt@tweedekamer.nl',
+      'h.vanderwerf@tweedekamer.nl',
+    ],
+  },
+
+  {
+    name: 'Ruben Brekelmans',
+    party: 'VVD',
+    primary: 'r.brekelmans@tweedekamer.nl',
+    cc: [
+      'b.becker@tweedekamer.nl',
+      'u.ellian@tweedekamer.nl',
+    ],
+  },
+
+  {
+    name: 'Jesse Klaver',
+    party: 'PRO',
+    primary: 'j.klaver@tweedekamer.nl',
+    cc: [
+      't.vanderlee@tweedekamer.nl',
+      'k.piri@tweedekamer.nl',
+    ],
+  },
+
+  {
+    name: 'Geert Wilders',
+    party: 'PVV',
+    primary: 'g.wilders@tweedekamer.nl',
+    cc: [
+      'r.deroon@tweedekamer.nl',
+      'e.vlottes@tweedekamer.nl',
+      'Pvv.publiek@tweedekamer.nl',
+    ],
+  },
+
+  {
+    name: 'Henri Bontenbal',
+    party: 'CDA',
+    primary: 'h.bontenbal@tweedekamer.nl',
+    cc: [
+      'h.krul@tweedekamer.nl',
+      'm.vanlanschot@tweedekamer.nl',
+    ],
+  },
+
+  {
+    name: 'Joost Eerdmans',
+    party: 'JA21',
+    primary: 'j.eerdmans@tweedekamer.nl',
+    cc: [
+      's.ceulemans@tweedekamer.nl',
+      'm.hoogeveen@tweedekamer.nl',
+    ],
+  },
+
+  {
+    name: 'Lidewij de Vos',
+    party: 'FVD',
+    primary: 'l.devos@tweedekamer.nl',
+    cc: [
+      'r.dekker@tweedekamer.nl',
+      't.russcher@tweedekamer.nl',
+      'partij@fvd.nl',
+    ],
+  },
+
+  {
+    name: 'Henk Vermeer',
+    party: 'BBB',
+    primary: 'h.vermeer@tweedekamer.nl',
+    cc: [
+      'c.vanderplas@tweedekamer.nl',
+      'f.wiersma@tweedekamer.nl',
+    ],
+  },
+
+  {
+    name: 'Stephan van Baarle',
+    party: 'DENK',
+    primary: 's.vbaarle@tweedekamer.nl',
+    cc: [
+      'i.elabassi@tweedekamer.nl',
+      'd.ergin@tweedekamer.nl',
+    ],
+  },
+
+  {
+    name: 'Chris Stoffer',
+    party: 'SGP',
+    primary: 'c.stoffer@tweedekamer.nl',
+    cc: [
+      'd.vandijk@tweedekamer.nl',
+      'a.flach@tweedekamer.nl',
+      'sgp@tweedekamer.nl',
+    ],
+  },
+
+  {
+    name: 'Christine Teunissen',
+    party: 'PvdD',
+    primary: 'c.teunissen@tweedekamer.nl',
+    cc: [
+      'i.kostic@tweedekamer.nl',
+      'esther.ouwehand@tweedekamer.nl',
+      'partijvoordedieren@tweedekamer.nl',
+    ],
+  },
+
+  {
+    name: 'Mirjam Bikker',
+    party: 'ChristenUnie',
+    primary: 'm.bikker@tweedekamer.nl',
+    cc: [
+      'd.ceder@tweedekamer.nl',
+      'p.grinwis@tweedekamer.nl',
+      'christenunie@tweedekamer.nl',
+    ],
+  },
+
+  {
+    name: 'Jimmy Dijk',
+    party: 'SP',
+    primary: 'j.dijk@tweedekamer.nl',
+    cc: [
+      's.dobbe@tweedekamer.nl',
+      's.beckerman@tweedekamer.nl',
+      'spfractie@tweedekamer.nl',
+    ],
+  },
+
+  {
+    name: 'Jan Struijs',
+    party: '50PLUS',
+    primary: 'j.struijs@tweedekamer.nl',
+    cc: [
+      'c.vanbrenk@tweedekamer.nl',
+      'tweedekamerfractie50PLUS@tweedekamer.nl',
+    ],
+  },
+
+  {
+    name: 'Laurens Dassen',
+    party: 'Volt',
+    primary: 'l.dassen@tweedekamer.nl',
+    cc: [],
+  },
+
+  {
+    name: 'Gidi Markuszower',
+    party: 'Groep Markuszower',
+    primary: 'g.markuszower@tweedekamer.nl',
+    cc: [],
+  },
+
+  {
+    name: 'Mona Keijzer',
+    party: 'Lid Keijzer',
+    primary: 'm.keijzer@tweedekamer.nl',
+    cc: [],
+  },
+],
 };
