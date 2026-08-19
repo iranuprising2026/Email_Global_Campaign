@@ -178,6 +178,7 @@ demands: {
         'garnett.genuis@parl.gc.ca',   // [VERIFIED 2026-08-12]
         'james.bezan@parl.gc.ca',      // [VERIFIED 2026-08-12]
         'roman.baber@parl.gc.ca',      // [VERIFIED 2026-08-12]
+        'kelly.mcCauley@parl.gc.ca',   // [VERIFIED 2026-08-19]
       ],
     },
     {
