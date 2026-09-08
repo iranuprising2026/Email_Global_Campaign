@@ -3,9 +3,11 @@
 A one-page website that helps people email members of their own national
 parliament, demanding action against the executions in Iran. A visitor picks
 their country and gets a ready-to-send letter addressed to that parliament, in
-that country's language. Six countries are live: the **Netherlands, Canada, the
-United Kingdom, Germany, Sweden and France**. The letters themselves exist in
-twelve languages, so the next country is often only a list of names away.
+that country's language. Six countries are live — the **Netherlands, Canada, the
+United Kingdom, Germany, Sweden and France** — plus the **European Parliament**,
+where the letter goes to a political group rather than a national party. The
+letters themselves exist in twelve languages, so the next country is often only
+a list of names away.
 
 **This guide is written for everyone on the team, including people who have never
 edited code before.** If you can follow a recipe, you can maintain this site.
@@ -53,8 +55,8 @@ From a supporter's point of view:
 6. They press **Open Email**, which opens their own mail app with everything
    filled in. They still press Send themselves, from their own address.
 7. The action is counted in the **Live Action Tracker** at the bottom of the
-   page. It has two charts. The top one compares all six countries, with the
-   visitor's own country in gold, so they can see whether it is pulling its
+   page. It has two charts. The top one compares all seven entries, with the
+   visitor's own in gold, so they can see whether it is pulling its
    weight. The one below shows the politicians *inside* that country. Both put
    the least-contacted at the top, because the whole point is to send people
    where the effort is missing rather than pile onto the same few inboxes.
@@ -110,12 +112,21 @@ assets/js/data/countries/
   de.js    Germany        —  5 parties, letters in German   @bundestag.de
   se.js    Sweden         —  6 parties, letters in Swedish  @riksdagen.se
   fr.js    France         —  7 parties, letters in French   @assemblee-nationale.fr
+  eu.js    European Parl. —  7 GROUPS,  letters in English  @europarl.europa.eu
 ```
+
+`eu.js` is the odd one out: **the European Parliament is not a country.** It
+appears in the same "Country" dropdown and behaves exactly like one, but its
+members are MEPs elected across all 27 member states, and the thing in the
+"party" slot is their **political group** — EPP, S&D, Renew, ECR, Greens/EFA,
+The Left, Patriots — not a national party. A supporter anywhere in the EU can
+write to any of the seven.
 
 So "who do we write to in Canada" is answered in exactly one place, `ca.js`,
 and you never have to touch code to answer it.
 
-Every country follows the same rule: **one entry per party.** The address in the
+Every country follows the same rule: **one entry per party** (for `eu.js`, one
+entry per political group). The address in the
 `To` field is that party's foreign-affairs figure or its leader; other MPs from
 the same party go in the `CC`. One send therefore reaches a whole party bloc,
 and the dropdown offers a supporter one choice per party rather than a long list
@@ -132,11 +143,11 @@ of individual names.
 > email addresses in it at all — they exist only on the individual profile
 > pages.
 >
-> **Canada is the only country whose addresses have been checked this way.** The
-> UK, Germany, Sweden and France went live on 2026-08-16 with 108 addresses that
-> nobody has verified against a parliament's own website — see
-> [section 12.3](#123-most-email-addresses-have-never-been-checked). Checking
-> them is the single most useful job on the list.
+> **All 215 addresses have been checked against their parliament's own register
+> (2026-09-08), and the sixteen that were wrong are fixed.** What was wrong and
+> why is recorded in
+> [section 12.3](#123-email-addresses--all-checked-and-fixed) — worth reading
+> before you add one, because every failure came from guessing.
 
 ---
 
@@ -287,7 +298,8 @@ bottom.
 
 1. **Verify every address on the parliament's own website first** —
    tweedekamer.nl, ourcommons.ca/members, members.parliament.uk,
-   bundestag.de, riksdagen.se, assemblee-nationale.fr. A wrong address means a
+   bundestag.de, riksdagen.se, assemblee-nationale.fr, and for MEPs
+   europarl.europa.eu/meps/en/full-list. A wrong address means a
    supporter's effort goes nowhere, and nothing warns anybody.
 2. Find any existing entry and copy the whole block, from `{` down to `},`.
    In a country whose list is still empty, copy the example block out of the
@@ -322,13 +334,13 @@ own — you do not have to switch anything on anywhere else. That is exactly how
 the United Kingdom went live on 2026-08-16: `uk.js` had been complete apart from
 its MPs, and adding seven entries was the whole launch.
 
-All six countries are live today, so nothing is greyed out at the moment. The
+All seven entries are live today, so nothing is greyed out at the moment. The
 greyed-out state comes back the day somebody adds the next country file.
 
 ### 4.3 Add a sixth email version
 
-File: **`assets/js/data/issues/executions.js`** — plus **two other files**, which
-is why this one needs care.
+File: **`assets/js/data/issues/executions.js`** — plus **two other files**, and
+possibly a fourth and fifth, which is why this one needs care.
 
 **Step 1.** In `executions.js`, copy an entire existing version block — from `{`
 before `id:` down to its closing `},` — and paste it before the closing `],` of
@@ -426,9 +438,25 @@ card, so a dark colour would be invisible against it.
 **Step 4.** Save all three files, refresh, and check that the dropdown offers
 Version 6 and that generating it produces the right text.
 
+**One last check, if the new subject line mentions the embassy.** Canada and the
+European Parliament do not demand an embassy closure, and they each carry a
+`subjectOverrides` block listing the versions whose shared subject is wrong for
+them. If your Version 6 subject names the embassy, add it to both of those
+blocks too — see
+[If the subject line is wrong too](#if-the-subject-line-is-wrong-too). If it
+does not mention the embassy, there is nothing to do.
+
 ### 4.4 Add a country
 
 This is two steps: one new file, one line added to the index.
+
+> **It does not have to be a country.** `eu.js` is the European Parliament, and
+> it was added exactly this way with no code change at all — the same two steps
+> below. If you want to add another assembly whose members are not organised by
+> national party (a regional parliament, say), copy `eu.js` rather than a
+> country file and put whatever grouping fits in the `party` field. The site
+> does not care what that word means; it just shows it in the dropdown and on
+> the chart.
 
 **Step 1.** In `assets/js/data/countries/`, copy the file of a country that
 already writes in the same language, or `se.js` if none does, and rename the
@@ -624,6 +652,44 @@ you review the letters — section 12.5 keeps the dated version of it.
 
 One open question about the demands is recorded in section 12: whether to add
 deportation of regime officials to Canada's wording (12.1).
+
+#### If the subject line is wrong too
+
+Changing `demands` only changes the letter's **text**. The subject line is
+separate, and two of the five carry the embassy in the subject itself:
+
+- Version 2 — "Stop the executions in Iran: Close the embassy and freeze IRGC assets"
+- Version 5 — "Execution Crisis: Demand for immediate closure of the Iranian embassy"
+
+If you change what a country demands, check whether those two still make sense
+for it. If they don't, add a `subjectOverrides` block to that country's file. It
+works exactly like `demands` — keyed by version, and anything you leave out
+keeps the shared subject:
+
+```js
+subjectOverrides: {
+  'Version 2': {
+    en: 'Stop the executions in Iran: Sanction those responsible and enforce the IRGC listing',
+  },
+  'Version 5': {
+    en: 'Execution Crisis: Targeted sanctions and full enforcement of the IRGC listing demanded',
+  },
+},
+```
+
+That is the real block from `ca.js`. Canada closed the Islamic Republic embassy
+in 2012, so both of its embassy subjects were wrong; `eu.js` has the same block
+for the same reason, since the European Parliament has no embassy either.
+Versions 1, 3 and 4 never mention the embassy, so they are not listed and keep
+the shared subject.
+
+**Do not fix this by editing the shared subject lines in `executions.js`.** The
+Netherlands, Germany, Sweden, France and the UK all still host that embassy and
+their letters correctly demand it be closed — changing the shared line would
+break five countries to fix one. An override changes one country only.
+
+If the country writes in more than one language, give every language it offers,
+plus `en` for the preview box, exactly as you would for `demands`.
 
 ### Change the campaign heading
 
@@ -836,7 +902,7 @@ If the app *is* installed and the website still wins:
   the type of click are recorded. Please keep it that way.
 - **Verify email addresses** against the parliament's own website before adding
   them — the sites are listed in section 4.2. Most of the ones already in the
-  repo have not been checked; see section 12.3.
+  repo were checked on 2026-09-08 and the sixteen wrong ones fixed — see section 12.3.
 - **Never let a country go live half-finished.** A country is only offered once
   it has both recipients and letters; the site enforces this, so don't work
   around it.
@@ -929,7 +995,8 @@ not.
 │           │   ├── uk.js         ← United Kingdom
 │           │   ├── de.js         ← Germany
 │           │   ├── se.js         ← Sweden
-│           │   └── fr.js         ← France
+│           │   ├── fr.js         ← France
+│           │   └── eu.js         ← European Parliament (groups, not parties)
 │           └── issues/
 │               └── executions.js ← the email texts, in 12 languages
 └── docs/
@@ -983,14 +1050,12 @@ another country goes live. Read it before starting any of this work.
 
 ## 12. Open items and decisions, for later
 
-Nothing here is broken. These are things that are **deliberately unfinished**,
-recorded so they are not forgotten and nobody has to rediscover them. Each says
-what it is, why it is still open, and which file it lives in.
-
-The three most urgent are 12.3 (unverified addresses), 12.4 (unreviewed
-translations) and 12.5 (unchecked campaign facts) — all three came in with the
-2026-08-16 expansion to six countries, and all three affect letters that are
-being sent right now.
+Everything here is **deliberately unfinished** and recorded so nobody has to
+rediscover it. The addresses used to be the urgent item; they were all checked
+and fixed on 2026-09-08, and 12.3 is now a record of what was wrong and why
+rather than a job. The most urgent remaining are 12.4 (unreviewed translations)
+and 12.5 (unchecked campaign facts) — both came in with the 2026-08-16
+expansion and both affect letters being sent right now.
 
 ### 12.1 Canada's demand could be sharper — needs a decision
 
@@ -1038,37 +1103,75 @@ stays the default because it is listed first, and the preview keeps showing the
 English translation underneath. Worth testing locally before publishing, but
 nothing else has to change.
 
-### 12.3 Most email addresses have never been checked
+### 12.3 Email addresses — all checked and fixed
 
-**Files:** `nl.js`, `uk.js`, `de.js`, `se.js`, `fr.js`.
+**Files:** all seven country files. **Nothing is outstanding here.**
 
-**160 of the site's 184 addresses are unverified.** Only Canada's 24 have been
-read off the MPs' own pages, on 2026-08-12, and they are the only ones carrying a
-`[VERIFIED]` note.
+Every address was checked on 2026-09-08 against the parliament's own register of
+members, and the sixteen that were wrong were fixed the same day.
 
-| File | Addresses | Status |
+| File | Addresses | Result |
 | --- | --- | --- |
-| `ca.js` | 24 | **Verified 2026-08-12** against ourcommons.ca |
-| `nl.js` | 52 | Carried over from the site's first version, never checked |
-| `uk.js` | 31 | Added 2026-08-16, never checked |
-| `se.js` | 30 | Added 2026-08-16, never checked |
-| `fr.js` | 27 | Added 2026-08-16, never checked |
-| `de.js` | 20 | Added 2026-08-16, never checked |
+| `nl.js` | 51 | 12 fixed |
+| `ca.js` | 25 | all were already correct |
+| `uk.js` | 31 | all were already correct |
+| `de.js` | 20 | all were already correct |
+| `se.js` | 29 | 3 fixed, 2 entries rebuilt |
+| `fr.js` | 28 | 1 replaced, 1 moved |
+| `eu.js` | 31 | verified when written |
 
-They all follow their parliament's usual pattern, so most are probably right —
-but "probably" is doing a lot of work, and a wrong address fails silently: the
-supporter presses Send, nothing arrives, and nobody finds out. Canada is the
-proof that patterns fail: two of its 24 do not match the standard form.
+**What was wrong, so the same mistake is not made again.** Every single failure
+came from *guessing* an address from a pattern instead of looking it up:
 
-Check them country by country against the official sites listed in section 4.2,
-and add a `[VERIFIED <date>]` comment as you go so the next person knows where
-you stopped.
+- **The Netherlands (12).** The Tweede Kamer shortens "van der" to `vd` and
+  "van" to `v` inside the address, and six members use their first name instead
+  of an initial. So `t.vanderlee@` had to become `t.vdlee@`,
+  `c.teunissen@` had to become `christine.teunissen@`, and so on. One of them
+  was worse than a bounce: `d.vandijk@` for Diederik van Dijk is a real address
+  belonging to nobody in particular, and five sitting members are called Dijk or
+  van Dijk, so the letter could have reached the wrong politician entirely.
+- **Sweden (3, plus two whole entries).** `niels.paarup.petersen@` needed a
+  hyphen; `anders.aadahl@` had a doubled letter. But the bigger problem was that
+  **five of the names were government ministers.** In Sweden a minister steps
+  back from their seat and the Riksdag stops publishing an address for them, so
+  those five addresses were invented. That included Ulf Kristersson and Ebba
+  Busch, who were the *main* recipient of the M and KD entries — meaning two of
+  the six Swedish letters had nowhere to land at all. Both entries were rebuilt
+  around each party's actual members of the foreign affairs committee.
+- **France (2).** Philippe Pradal left the Assemblée in June 2024, so his
+  address had been dead for two years. And Constance Le Grip was copied on two
+  entries at once; she sits for EPR, so she was removed from the Droite
+  Républicaine one, where Michel Barnier took the slot.
+- **The Netherlands, once more.** The FVD entry was addressed to Lidewij de Vos,
+  who is no longer a member of parliament. It now goes to Ralf Dekker, FVD's
+  member of the foreign affairs committee.
 
-Two Dutch ones look like typos and are **not** — leave them alone:
+**One consequence to know about.** Three entries changed who they are addressed
+to — FVD, and the Swedish M and KD entries. The Live Action Tracker stores the
+recipient's name, so those three start from zero in the chart. The counts under
+the old names are not lost, they simply stop growing. This was unavoidable: the
+people they named are not in parliament, or cannot be reached there.
 
-- `b.eerdmans@` for Joost Eerdmans, who is registered under his formal initial.
-- `j.jaspervandijk@` in the SP list.
+**How to check an address, if you add one.** Open the member's own page on the
+official parliament site — not a news article, not a party page — copy the
+address exactly as shown including any capital letters, and add a comment
+`// [VERIFIED <date>]` after it. Section 4.2 lists the sites. **Never guess from
+the pattern**, however obvious it looks: every mistake above came from that, and
+Canada has two addresses that break its own pattern.
 
+**Things that look wrong and are not — leave them alone:**
+
+- `Pvv.publiek@tweedekamer.nl` and `tweedekamerfractie50PLUS@tweedekamer.nl`
+  have capital letters in the middle. That is how the Tweede Kamer writes them.
+- `b.eerdmans@` for Joost Eerdmans — he is registered under his formal initial.
+  This one was *broken* by a well-meaning edit in August 2026 that "corrected"
+  it to `j.eerdmans@`. It is back to `b.`.
+- `gary.anand@parl.gc.ca` for Gary Anandasangaree, and `kelly.mcCauley@`.
+- `ioannis.maniatis@europarl.europa.eu` for an MEP listed everywhere as *Yannis*.
+
+**One thing genuinely still open: Sweden votes on 13 September 2026.** Every name
+in `se.js` comes from the parliament elected in 2022. Expect to redo that file
+after the result.
 ### 12.4 The ten new translations have not been reviewed
 
 **File:** `assets/js/data/issues/executions.js`.
@@ -1142,6 +1245,7 @@ expansion.
 - **Finnish has no name.** The letters exist in Finnish, but `LANGUAGE_NAMES` in
   `assets/js/data/index.js` has no `fi:` line, so a Finnish country would display
   the raw code. One line, whenever Finland is added.
+
 
 ---
 

@@ -25,6 +25,7 @@ import uk from './countries/uk.js';
 import de from './countries/de.js';
 import se from './countries/se.js';
 import fr from './countries/fr.js';
+import eu from './countries/eu.js';
 import executions from './issues/executions.js';
 
 /**
@@ -32,9 +33,13 @@ import executions from './issues/executions.js';
  *
  * Being listed here does not put a country in front of visitors: one with no
  * recipients yet is shown greyed out as "coming soon" until its `politicians`
- * list is filled in. The United Kingdom is in that state.
+ * list is filled in. Nothing is in that state right now -- every entry below
+ * has both recipients and letters, so all of them are sendable.
+ *
+ * Note that "eu" is the European Parliament, not a country. It behaves exactly
+ * like one here, but the thing in its `party` field is an EP political group.
  */
-export const countries = [nl, ca, uk, de, se, fr];
+export const countries = [nl, ca, uk, de, se, fr, eu];
 
 /**
  * Countries we intend to add but have not written a file for yet.

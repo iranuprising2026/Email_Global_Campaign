@@ -73,25 +73,43 @@ assets/js/
                             issuesForLanguage, languagesForCountry.
   data/countries/nl.js    ← NL: id, name, languages[], terms, anonymousSignature,
                             demands{}, politicians[] {name, party, primary, cc[]}.
-                            13 entries, 4 addresses each.
+                            17 entries (post-2025-election Kamer), 51 addresses,
+                            all verified 2026-09-08.
   data/countries/ca.js    ← Canada, en. 5 entries, one per party (Liberal,
-                            Conservative, NDP, Bloc Québécois, Green). Every
-                            address [VERIFIED 2026-08-12] off ourcommons.ca.
-                            demands rewritten 2026-08-16 (sanctions/enforcement).
+                            Conservative, NDP, Bloc Québécois, Green). All 25
+                            addresses verified off ourcommons.ca (2026-08-12,
+                            re-confirmed 2026-09-08).
+                            demands rewritten 2026-08-16 (sanctions/enforcement);
+                            subjectOverrides added 2026-09-08 for V2/V5, which
+                            otherwise demand closing an embassy Canada shut in 2012.
   data/countries/uk.js    ← UK, en. 7 entries (Labour, Conservative, Reform UK,
                             Lib Dem, Green, SNP, Plaid Cymru). @parliament.uk,
-                            not parl.gc.ca. Addresses UNVERIFIED.
+                            not parl.gc.ca. Addresses verified 2026-09-08.
   data/countries/de.js    ← Germany, de. 5 entries (CDU/CSU, SPD, AfD, Grüne,
-                            Linke) @bundestag.de. Addresses UNVERIFIED.
+                            Linke) @bundestag.de. All 20 verified 2026-09-08.
   data/countries/se.js    ← Sweden, sv. 6 entries (S, SD, M, C, V, KD)
-                            @riksdagen.se. Addresses UNVERIFIED.
+                            @riksdagen.se. 29 addresses, all verified
+                            2026-09-08; the M and KD entries were rebuilt around
+                            the utrikesutskottet after 5 ministers turned out to
+                            have no published address.
   data/countries/fr.js    ← France, fr. 7 entries (RN, EPR, LFI-NFP, PS, DR, E&S,
-                            Horizons) @assemblee-nationale.fr. UNVERIFIED.
+                            Horizons) @assemblee-nationale.fr. 28 addresses, all
+                            verified 2026-09-08.
+  data/countries/eu.js    ← European Parliament, en. NOT a country: 7 entries,
+                            one per EP political group, `party` holds the group
+                            (EPP, S&D, Renew, ECR, Greens/EFA, The Left,
+                            Patriots). 31 addresses, all verified twice
+                            2026-09-08. Recipients all signed an Iran
+                            resolution this term; demands and subjectOverrides
+                            target the Council's IRGC listing, not an embassy.
   data/issues/executions.js ← Email texts. versions[] → {subject,body} keyed by
                             language. 12 languages since 2026-08-16: nl en de fr
                             it es sv no da pl fi pt.
   email.js                  PURE. Exports buildEmail, buildMailtoUrl,
-                            formatForClipboard, isMobileUserAgent.
+                            buildComposeUrl, formatForClipboard,
+                            isMobileUserAgent. Internal demandsFor() and
+                            subjectFor() apply a country's per-version
+                            `demands` / `subjectOverrides`.
   stats.js                  Supabase read/write. Never throws by design.
                             fetchActions (rows for one topic) + fetchTopicTotals
                             (head-only counts, one query per country).
@@ -228,6 +246,90 @@ python3 -m http.server 8765 &
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless --disable-gpu \
   --no-sandbox --virtual-time-budget=8000 --dump-dom http://localhost:8765/ > /tmp/dom.html
 ```
+
+**Check the subject lines match what each entry actually demands** (the check
+that caught the 2026-09-08 bug; recreate in the scratchpad). Asserts that `ca`
+and `eu` never demand an embassy closure in a subject, that the other five
+still do, and that any `subjectOverrides` covers every language its country
+offers plus `en`:
+
+```bash
+node --input-type=module -e "
+const d = await import('./assets/js/data/index.js');
+const e = await import('./assets/js/email.js');
+const EMBASSY = /embassy|botschaft|ambassade|ambasciata|embajada|ambassad|ambasada|embaixada/i;
+const NO_EMBASSY = new Set(['ca', 'eu']);
+const fails = [];
+for (const c of d.countries)
+  for (const language of d.languagesForCountry(c))
+    for (const v of d.issues[0].versions) {
+      const r = e.buildEmail({country: c, issue: d.issues[0], versionId: v.id, politician: c.politicians[0], language, userName: '', city: ''});
+      const hit = EMBASSY.test(r.subject.sent), hitEn = EMBASSY.test(r.subject.en);
+      if (NO_EMBASSY.has(c.id) && (hit || hitEn)) fails.push(c.id + '/' + language + '/' + v.id + ': subject demands an embassy closure');
+      if (!NO_EMBASSY.has(c.id) && ['Version 2','Version 5'].includes(v.id) && !hit) fails.push(c.id + '/' + language + '/' + v.id + ': embassy subject LOST');
+      const ov = c.subjectOverrides?.[v.id];
+      if (ov && (!ov[language] || !ov.en)) fails.push(c.id + '/' + language + '/' + v.id + ': subjectOverrides misses a language');
+    }
+console.log(fails.length ? 'FAIL\n' + fails.join('\n') : 'PASS');
+"
+```
+
+**Prove a change leaves the other countries byte-identical** — the technique
+that verified the 2026-09-08 subject fix. `git archive HEAD | tar -x -C <scratch>/head_copy`,
+then import `index.js`/`email.js` from **both** trees and compare
+`subject.sent/.en`, `body.sent/.en` and `recipients` across every country ×
+language × version × politician of the OLD set. It reported 235 letters and
+exactly the 20 intended diffs. Far better than eyeballing: it catches a shared
+letter accidentally reworded for everybody.
+
+**Verify every recipient address against the parliaments' own registers**
+(done 2026-09-08; recreate in the scratchpad, not committed). One source per
+country — all six are machine-readable except Germany:
+
+```bash
+# UK  — authoritative, includes the email: page Search, then Contact per member
+curl -s "https://members-api.parliament.uk/api/Members/Search?House=1&IsCurrentMember=true&skip=0&take=20"
+curl -s "https://members-api.parliament.uk/api/Members/<id>/Contact"   # .value[].email
+# NL  — OData; TotEnMet eq null = sitting. PersoonContactinformatie Soort='E-mail'
+curl -s "https://gegevensmagazijn.tweedekamer.nl/OData/v4/2.0/FractieZetelPersoon?\$filter=TotEnMet%20eq%20null%20and%20Verwijderd%20eq%20false&\$expand=Persoon(\$expand=PersoonContactinformatie),FractieZetel(\$expand=Fractie)&\$top=250"
+# NL fractie mailboxes live only on the fractie pages, not in the API:
+curl -s "https://www.tweedekamer.nl/kamerleden_en_commissies/fracties"   # then each slug
+# CA  — list has no email; scrape each MP page (338 of them, xargs -P 8)
+curl -s "https://www.ourcommons.ca/members/en/search/XML"
+curl -s "https://www.ourcommons.ca/members/en/<first>-<last>(<PersonId>)" | grep -o '[a-zA-Z0-9._%-]*@parl\.gc\.ca'
+# SE  — personlista, then scrape each member page (status field, see Gotchas)
+curl -s "https://data.riksdagen.se/personlista/?utformat=json"
+curl -s "https://www.riksdagen.se/sv/ledamoter-och-partier/ledamot/<slug>_<sourceid>/"
+# FR  — official open data, refreshed daily, emails included
+curl -sL -o fr.zip "https://data.assemblee-nationale.fr/static/openData/repository/17/amo/deputes_actifs_mandats_actifs_organes/AMO10_deputes_actifs_mandats_actifs_organes.json.zip"
+# json/acteur/*.json → acteur.adresses.adresse[].valElec ; groupe = mandat typeOrgane 'GP' with no dateFin
+```
+
+The **European Parliament** is the best source of the seven — group and email
+in one call, no scraping:
+
+```bash
+# every sitting MEP with country + political group (719 on 2026-09-08)
+curl -s -H 'accept: application/ld+json' \
+  "https://data.europarl.europa.eu/api/v2/meps/show-current?format=application%2Fld%2Bjson&limit=1000"
+# one MEP: hasEmail holds "mailto:<address>"
+curl -s -H 'accept: application/ld+json' \
+  "https://data.europarl.europa.eu/api/v2/meps/<id>?format=application%2Fld%2Bjson"
+```
+
+`www.europarl.europa.eu` itself (MEP pages, `doceo` documents) answers **202
+with an empty body** to curl and WebFetch — drive it over CDP. The
+`doceo/document/RC-10-YYYY-NNNN_EN.html` joint motions are the thing worth
+reading there: they list the MEPs who tabled a resolution **group by group**,
+which is how `eu.js` picked its recipients.
+
+Germany has no such source (see **Gotchas**): get the MdB roster from
+`https://www.bundestag.de/ajax/filterlist/de/abgeordnete/1040594-1040594?limit=12&offset=N`
+(12 per page, ~53 pages, gives `/abgeordnete/biografien/L/last_first-id`), then read the
+addresses off the fraction sites over CDP — `spdfraktion.de/abgeordnete/<last>` (plain
+curl works), `gruene-bundestag.de/abgeordnete/details/<first>-<last>/`,
+`dielinkebt.de/abgeordnete/profil/<first>-<last>/`,
+`afdbundestag.de/abgeordnete/<[dr-]first-last>/`, `cducsu.de/abgeordnete/<first>-<last>`.
 
 **Recompute an SRI hash** after changing a CDN version in `index.html`:
 
@@ -369,6 +471,86 @@ Note: `gh` is **not** installed on this machine.
   version does not touch every country file. `buildEmail` throws if a letter
   contains [DEMANDS] and the country has no wording for it — the check is
   conditional on the text so a country whose letters never use it needs no field.
+- **Subject lines never use `[DEMANDS]`. Fixed 2026-09-08 with
+  `subjectOverrides`.** `executions.js` subjects are fixed strings: V2 "Stop the
+  executions in Iran: Close the embassy and freeze IRGC assets" and V5
+  "Execution Crisis: Demand for immediate closure of the Iranian embassy". Right
+  for NL/DE/SE/FR/UK, wrong for **Canada** (embassy closed 2012) and the
+  **European Parliament** (never had one), whose bodies `demands` had already
+  corrected — so those two sent a subject contradicting their own letter. A
+  country file may now carry an optional `subjectOverrides` keyed by version id,
+  mirroring `demands`; anything not overridden falls back to the shared subject,
+  so the five embassy-hosting countries are byte-identical (proved against
+  `git archive HEAD`: 235 letters, the only 20 diffs being Canada's V2/V5
+  subjects). The fallback is deliberate and silent rather than a throw — a
+  missing subject must never block a send — so use the subject check under
+  **Commands** to catch an override that misses a language.
+- **A changed module is invisible in a warm browser until the cache is
+  cleared.** Cost 15 minutes on 2026-09-08: the fix above was correct in Node
+  and the page still showed the old subject, because the reused
+  `--user-data-dir` had `email.js` cached. `?v=N` on `styles.css` does **not**
+  propagate to module imports, so there is no cache-buster for them at all. Any
+  CDP run that verifies a JS change must send
+  `Network.enable` + `Network.setCacheDisabled {cacheDisabled: true}`, or it
+  will cheerfully confirm the old behaviour.
+- **EP addresses have no derivable pattern — worse than `parl.gc.ca`.** From
+  the 31 in `eu.js`: `ioannis.maniatis@` for a man listed everywhere as *Yannis*;
+  `abir.alsahlani@` drops the hyphen while
+  `marie-agnes.strack-zimmermann@` keeps both; `d.montserrat@` is an initial;
+  `isabel.wiseler@` drops the second half of Wiseler-Lima; plus
+  `antonio.lopezisturiz@`, `hana.jalloulmuro@`, `jorge.martinfrias@`,
+  `nicolas.pascualdelaparte@`, `moritz.koerner@`. Always read `hasEmail` from
+  the open-data API.
+- **`eu` is in `countries[]` but is not a country.** `politicianLabel()` puts an
+  EP *political group* in the party slot, so the tracker's frozen strings there
+  are `EPP`, `S&D`, `Renew`, `ECR`, `Greens/EFA`, `The Left`, `Patriots`.
+  Nothing in the code special-cases it — `isSendable()`, the dropdowns and both
+  charts treat it like any other entry, which is why it needed no code change.
+- **The Tweede Kamer contracts `van der`/`van` to `vd`/`v` in the local part, and
+  six members use `firstname.lastname@` instead of initials.** So
+  `t.vdlee@`, `c.vdplas@`, `m.vlanschot@`, `c.vbrenk@`, `p.vhouwelingen@`,
+  `i.eabassi@` (el Abassi), `d.j.h.vdijk@` — and
+  `christine.teunissen@`, `ines.kostic@`, `esther.ouwehand@`, `maikel.boon@`,
+  `edgar.mulder@`, `diederik.boomsma@`. Both patterns coexist with no rule, and
+  no member has an alias, so a spelled-out `t.vanderlee@` simply bounces. Never
+  derive a Dutch address; read it from the OData API (see **Commands**). Twelve
+  of the 51 NL addresses were wrong this way on 2026-09-08.
+- **Dutch fractie mailboxes are not in the OData API** — only on each fractie
+  page. Six exist and all are live: `Pvv.publiek@`, `sgp@`, `christenunie@`,
+  `spfractie@`, `partijvoordedieren@`, `tweedekamerfractie50PLUS@`. The mixed
+  casing is exactly as the Tweede Kamer publishes it; do not "normalise" it.
+- **`bundestag.de` is behind an "Enodia" JS bot challenge and publishes no MdB
+  email at all.** Plain `curl`/WebFetch get a 303 to `/.enodia/challenge`, and
+  the challenge page still returns a plausible `<title>`, so a scrape looks like
+  it worked and silently yields nothing — 639 pages fetched that way on
+  2026-09-08 were all empty. Worse, even the real biography page has no address:
+  contact is a form at `/services/formular/contactform?mdbId=<id>`. The MPs'
+  own fraction sites are the source (see **Commands**); `vorname.nachname@bundestag.de`
+  was confirmed there for all 20, umlauts transliterated (`droege`, `roettgen`,
+  `moeller`, `duering`, `soeren`, `juergen`) and `Haßelmann` → `hasselmann`.
+- **`nosdeputes.fr` is frozen at the 16th legislature** (every mandate ends
+  2024-06-09), so it will confirm addresses for deputies who left two years ago.
+  It is still useful for one thing only: it shows the AN local part is
+  `Prenom.Nom@` (case-insensitive). Use the official
+  `data.assemblee-nationale.fr` zip for anything real — it is rebuilt daily.
+- **Swedish ministers have no `riksdagen.se` address.** A statsråd is on leave
+  from the seat, so their member page drops the email; `regeringen.se` says mail
+  to a minister goes to the department's *registrator*, not to a person. This
+  hit `se.js` hard — Kristersson (M) and Busch (KD) were the **To** recipients of
+  their entries, with Forssmed/Carlson/Kullgren as CCs, so two of six Swedish
+  entries could not be delivered at all. Fixed 2026-09-08 by rebuilding both
+  around each party's `utrikesutskottet` (foreign affairs committee) members.
+  **When a country's leader is also a minister, check for a published address
+  before making them the To** — the same trap waits in any parliamentary system
+  where ministers leave their seat.
+- **`riksdagen.se` member `status` is not a simple flag.** The Speaker and
+  deputy speakers read "Förste/Andre vice talman (tjänstgörande
+  riksdagsledamot)", so filtering on `startswith('Tjänstg')` silently drops
+  them — that false-flagged Julia Kronlid and Kenneth G Forslund, both valid.
+  Match on `'tjänstgörande' in status.lower()` instead. Also: `tilltalsnamn`
+  can carry a middle initial (`Kenneth G`), which the address keeps
+  (`kenneth.g.forslund@`), and hyphenated surnames keep the hyphen
+  (`niels.paarup-petersen@`, not `.paarup.petersen@`).
 - **`Firstname.Lastname@parl.gc.ca` is 17/18, not 18/18.** Measured against the
   user's verified Canadian addresses: Robert Oliphant answers at `rob.oliphant@`.
   Nicknames break it and the failure is silent (a bounce, or nothing). Accents
@@ -518,14 +700,32 @@ Unverified — confirm before relying on, and update this section once known:
   assets, written by analogy to the Dutch wording. Verify before treating the
   letters as accurate; if one is wrong, the letters demand something already
   done, which is exactly the failure Canada's rewrite avoids.
-- **The 108 addresses added 2026-08-16 (uk.js 31, de.js 20, se.js 30, fr.js 27
-  unique) are UNVERIFIED.** None carries a `[VERIFIED]` marker and none was
-  checked here; they arrived with the user's commits. They follow each
-  parliament's usual pattern (`firstname.lastname.mp@parliament.uk`,
-  `firstname.lastname@bundestag.de` / `@riksdagen.se` /
-  `@assemblee-nationale.fr`), and a pattern-derived address fails silently —
-  see the `parl.gc.ca` gotcha. With the 52 Dutch ones, 160 of the site's 184
-  addresses are unverified; only Canada's 24 have been checked.
+- ~~**The 108 addresses added 2026-08-16 are UNVERIFIED.**~~ **Settled
+  2026-09-08 — all 185 address slots (184 unique) were checked against each
+  parliament's own register** (see **Commands** for the recipes). Result:
+  **164 confirmed, 16 wrong, 5 unsupported.** UK 31/31, CA 25/25, DE 20/20
+  and FR 27/28 are clean. The failures are all in `nl.js` and `se.js` and are
+  listed under **Not yet fixed** below. Re-run the check after any election —
+  the addresses are only as current as the register on the day.
+- ~~**The V2/V5 subject lines contradict the body for Canada and the EU.**~~
+  **Fixed 2026-09-08** with `subjectOverrides` in `email.js` — see **Gotchas**.
+  Adding a 6th version now touches a fourth place if its subject names the
+  embassy: `ca.js` and `eu.js` would each need an override for it.
+- **The EP's `demands` assume the Council still has not listed the IRGC.**
+  True as of the 22 Jan 2026 and Apr 2026 resolutions, both of which call on
+  the Council to do it — i.e. it had not happened by then. Not re-checked
+  against Council decisions since; if the listing has since gone through, the
+  EP letters demand something already done. Same failure mode as Canada's
+  pre-rewrite wording.
+- ~~**Not yet fixed (found 2026-09-08).**~~ **All 16 fixed 2026-09-08.** See
+  the Log. Three entries changed recipient — `nl` FVD (de Vos → Ralf Dekker),
+  `se` M (Kristersson → Margareta Cederfelt) and `se` KD (Busch → Magnus
+  Berntsson) — so their `politicianLabel()` changed and the tracker restarts
+  those three from zero. Unavoidable: the old names are not reachable.
+- **Sweden votes on 2026-09-13, five days after this check.** Every `se.js`
+  name and address is from the 2022–2026 Riksdag and starts going stale that
+  Sunday; a new Kamer/parliament is the one event that invalidates a whole
+  country file at once, exactly as the Dutch October 2025 election did.
 - **The 12-language letter set (2026-08-16) has not been reviewed for
   translation accuracy.** All 60 subject/body pairs build without error and no
   placeholder is left unreplaced (215 combinations checked), but that is a
@@ -537,10 +737,12 @@ Unverified — confirm before relying on, and update this section once known:
   vacancies or an export gap is unknown. Two rows also disagree with expectation
   — Lori Idlout is listed Liberal and Alexandre Boulerice Independent; the PDF
   was taken as the source of truth rather than corrected.
-- **Email addresses in `data/countries/nl.js` were carried over verbatim** and have
-  not been checked against tweedekamer.nl. Two look odd but are intentional:
-  `b.eerdmans@` for Joost Eerdmans (formal initial) and
-  `j.jaspervandijk@` in the SP list.
+- ~~**Email addresses in `data/countries/nl.js` were carried over verbatim**~~
+  **Checked 2026-09-08 against the Tweede Kamer's OData API** — 39 of 51 right,
+  12 wrong (see **Not yet fixed**). `nl.js` was replaced wholesale by the user in
+  commits 3ecb70a/eb60cf4 (2026-08-19) for the post-2025-election Kamer: 17
+  entries now, and the new party labels `PRO` (20 seats), `Groep Markuszower`
+  (7) and `Lid Keijzer` (1) all match the API's own `Fractie.Afkorting`.
 
 ---
 
@@ -710,6 +912,69 @@ prune anything superseded.
   found and fixed on the way: Chart.js was clipping long politician names on a
   phone. Deliberately not built: clicking a country bar to switch country — the
   dropdown already does it.
+- **2026-09-08** — Fixed all 16 bad addresses found by the audit. `nl.js`: the
+  eleven `vd`/`firstname.lastname` corrections, incl. restoring `b.eerdmans@`;
+  the FVD entry re-pointed from the departed Lidewij de Vos to **Ralf Dekker**,
+  FVD's member of the Vaste commissie voor Buitenlandse Zaken, with
+  `g.f.c.vmeijeren@` added. `se.js`: the hyphen/`aadahl` typos, Wallmark
+  dropped, and the M and KD entries **rebuilt** around the utrikesutskottet
+  (Cederfelt To + Alm/Ahlstedt; Berntsson To + Brunegård/Aydin) because all five
+  ministers have no Riksdag address. `fr.js`: Pradal → **Bertrand Bouyx**
+  (Horizons, foreign affairs cttee) and Le Grip moved off the DR entry in favour
+  of **Michel Barnier**. Every replacement was chosen by the project's own
+  "party's foreign-affairs figure" rule, read from each parliament's committee
+  register, and every new address verified before it was written. Result: **215
+  address slots, 215 unique, 0 wrong, 0 duplicates**, 270 letter combinations
+  building clean. Cost: three `politicianLabel()` changes, so those three
+  tracker histories restart.
+- **2026-09-08** — Fixed the V2/V5 subject lines for Canada and the European
+  Parliament. New optional `subjectOverrides` in a country file, keyed by
+  version id and applied by `subjectFor()` in `email.js`, mirroring `demands`;
+  unlisted versions fall back to the shared subject, silently and on purpose, so
+  a missing subject can never block a send. Canada's two now ask for sanctions
+  and IRGC enforcement, the EP's for the Council's IRGC designation. Rewriting
+  the shared subjects was rejected: NL/DE/SE/FR/UK all still host an embassy and
+  their wording is right. Proved with a before/after diff against
+  `git archive HEAD` — 235 letters compared, exactly the 20 intended Canadian
+  diffs, every other subject, body and recipient byte-identical. Two new
+  **Commands** (the subject check, the byte-identical harness) came out of it,
+  and one new **Gotcha**: a warm browser served the old `email.js` and made the
+  fix look broken until CDP was told to disable the cache.
+- **2026-09-08** — Added the **European Parliament** as a seventh entry
+  (`eu.js` + two lines in `data/index.js`, no code change — `isSendable()`
+  picked it up by itself). Seven recipients, one per political group, `party`
+  holding the group. Selection standard: every one of the 31 MEPs personally
+  tabled an Iran resolution this term — mostly the cross-party joint motion
+  RC-B10-0071/2026 of 22 Jan 2026 (adopted 562-9-57), which names tablers group
+  by group; Patriots came from their own B10-0117/2026 since they did not sign
+  the joint one. Deliberately **not** used: press coverage of the April 2026
+  Iran conference, which is NCRI/MEK-aligned and named two non-MEPs
+  (Verhofstadt, Däubler-Gmelin) as speakers. All 31 addresses verified twice
+  (open-data `hasEmail` + each MEP's public page) and none is guessable.
+  `demands` targets the Council's IRGC listing rather than an embassy, since an
+  MEP cannot close one. Verified over CDP end to end: the entry appears, the
+  group dropdown fills, Generate produces the right To+CC, no console errors,
+  270 letter combinations build (was 215). Including Patriots for Europe was
+  the user's explicit call after being shown the trade-off. **One defect found
+  and left unfixed** — the V2/V5 subject lines still say "close the embassy",
+  which is wrong for both the EP and Canada; see **Gotchas** and **Open
+  questions**.
+- **2026-09-08** — Audited **all 185 recipient address slots (184 unique)**
+  against each parliament's own register rather than any pattern: **164
+  confirmed, 16 wrong, 5 unsupported.** Clean: UK 31/31 (members-api, which
+  publishes the email outright — and Andy Burnham really is an MP again,
+  Makerfield since 2026-06-18, as are Reform's Jenrick and Rosindell), CA 25/25
+  (incl. the two odd-looking ones, `gary.anand@` for Anandasangaree and
+  `kelly.mcCauley@`), DE 20/20, FR 27/28. Every failure is in `nl.js` (12, all
+  from the Tweede Kamer's undocumented `vd`/`firstname.lastname` local parts,
+  including a re-broken `b.eerdmans@`) or `se.js` (3 wrong + 5 ministers who
+  have no Riksdag address at all). Nothing was changed — the list of exact
+  replacements is under **Open questions → Not yet fixed**, because two items
+  need a human decision: who replaces FVD's departed Lidewij de Vos, and how to
+  reach the five Swedish ministers. Six new **Gotchas** and one new
+  **Commands** block came out of it; the biggest was that `bundestag.de` serves
+  a bot challenge *with a valid-looking title*, so 639 scraped pages read as
+  "no email found" instead of as an error.
 - **2026-08-03** — Added the Bash-logging `PostToolUse` hook (see **Commands**).
   **Deliberately did not add a `Stop` hook** to nag about updating this file:
   `prompt`/`agent` hook types only work on tool events, so a Stop reminder must be
