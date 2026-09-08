@@ -151,14 +151,35 @@ export default {
       ],
     },
     {
-      name: 'Ulf Kristersson',
+      // Was Ulf Kristersson until 2026-09-08. He is Prime Minister, and in
+      // Sweden a statsråd steps back from their seat -- the Riksdag then stops
+      // publishing an address for them, so ulf.kristersson@riksdagen.se was a
+      // guess that nothing supported. Margareta Cederfelt replaces him: she is
+      // a full member (ledamot) of the utrikesutskottet, the foreign affairs
+      // committee, which is the same rule the other entries follow. She was
+      // already in the CC below.
+      //
+      // To reach the Prime Minister, Swedish practice is to write to the
+      // relevant ministry's registrator rather than the person -- see
+      // regeringen.se/kontaktuppgifter. Not added here because this file only
+      // carries addresses that have been verified.
+      name: 'Margareta Cederfelt',
       party: 'M',
-      primary: 'ulf.kristersson@riksdagen.se',
+      primary: 'margareta.cederfelt@riksdagen.se', // [VERIFIED 2026-09-08]
+                                                   //   foreign affairs cttee
       cc: [
-        'karin.enstrom@riksdagen.se',
-        'mattias.j.karlsson@riksdagen.se',
-        'hans.wallmark@riksdagen.se',
-        'margareta.cederfelt@riksdagen.se',
+        'karin.enstrom@riksdagen.se',       // [VERIFIED 2026-09-08] former
+                                            //   foreign minister, on the cttee
+        'mattias.j.karlsson@riksdagen.se',  // [VERIFIED 2026-09-08] note the
+                                            //   'j': the SD entry has a
+                                            //   different Mattias Karlsson
+        'ann-sofie.alm@riksdagen.se',       // [VERIFIED 2026-09-08] foreign
+                                            //   affairs cttee. Replaces Hans
+                                            //   Wallmark, who left the Riksdag
+                                            //   on 2024-08-20 to become
+                                            //   ambassador to Denmark.
+        'fredrik.ahlstedt@riksdagen.se',    // [VERIFIED 2026-09-08] foreign
+                                            //   affairs cttee
       ],
     },
     {
@@ -166,10 +187,10 @@ export default {
       party: 'C',
       primary: 'elisabeth.thand.ringqvist@riksdagen.se',
       cc: [
-        'niels.paarup.petersen@riksdagen.se',
+        'niels.paarup-petersen@riksdagen.se', // [VERIFIED 2026-09-08] a HYPHEN, not a dot
         'daniel.backstrom@riksdagen.se',
         'rickard.nordin@riksdagen.se',
-        'anders.aadahl@riksdagen.se',
+        'anders.adahl@riksdagen.se',          // [VERIFIED 2026-09-08] one 'a': Ådahl -> adahl
       ],
     },
     {
@@ -184,14 +205,27 @@ export default {
       ],
     },
     {
-      name: 'Ebba Busch',
+      // Was Ebba Busch until 2026-09-08, with Jakob Forssmed, Andreas Carlson
+      // and Peter Kullgren in the CC. ALL FOUR are government ministers, and a
+      // Swedish minister steps back from their seat, so the Riksdag publishes
+      // no address for any of them -- this entire entry was built from four
+      // guesses and its letters had nowhere to land. Rebuilt from KD's actual
+      // members of the utrikesutskottet (foreign affairs committee).
+      //
+      // Ministers are reached through their ministry's registrator instead --
+      // see regeringen.se/kontaktuppgifter.
+      name: 'Magnus Berntsson',
       party: 'KD',
-      primary: 'ebba.busch@riksdagen.se',
+      primary: 'magnus.berntsson@riksdagen.se', // [VERIFIED 2026-09-08] KD's
+                                                //   full member of the foreign
+                                                //   affairs committee
       cc: [
-        'mikael.oscarsson@riksdagen.se',
-        'andreas.carlson@riksdagen.se',
-        'jakob.forssmed@riksdagen.se',
-        'peter.kullgren@riksdagen.se',
+        'mikael.oscarsson@riksdagen.se',  // [VERIFIED 2026-09-08] foreign
+                                          //   affairs cttee; was already here
+        'gudrun.brunegard@riksdagen.se',  // [VERIFIED 2026-09-08] foreign
+                                          //   affairs cttee
+        'yusuf.aydin@riksdagen.se',       // [VERIFIED 2026-09-08] foreign
+                                          //   affairs cttee
       ],
     },
   ],

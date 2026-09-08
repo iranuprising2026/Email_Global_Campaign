@@ -165,9 +165,16 @@ export default {
       party: 'DR',
       primary: 'laurent.wauquiez@assemblee-nationale.fr',
       cc: [
-        'michel.herbillon@assemblee-nationale.fr',
-        'constance.legrip@assemblee-nationale.fr',
-        'philippe.gosselin@assemblee-nationale.fr',
+        'michel.herbillon@assemblee-nationale.fr', // [VERIFIED 2026-09-08]
+                                                   //   vice-president of the
+                                                   //   foreign affairs cttee
+        // Constance Le Grip was here until 2026-09-08. Her address is fine, but
+        // she sits for EPR, not DR -- she was CC'd on two entries at once and
+        // this was the wrong one. She remains on the Gabriel Attal (EPR) entry,
+        // where she belongs. Michel Barnier takes the slot: former Prime
+        // Minister, DR, and a member of the foreign affairs commission.
+        'michel.barnier@assemblee-nationale.fr',   // [VERIFIED 2026-09-08]
+        'philippe.gosselin@assemblee-nationale.fr',// [VERIFIED 2026-09-08]
       ],
     },
     {
@@ -187,7 +194,12 @@ export default {
       cc: [
         'laetitia.saint-paul@assemblee-nationale.fr',
         'frederic.valletoux@assemblee-nationale.fr',
-        'philippe.pradal@assemblee-nationale.fr',
+        // Replaces Philippe Pradal, who was here until 2026-09-08: he left the
+        // Assemblee on 2024-06-09 and his seat belongs to Bernard Chaix, so the
+        // address had been dead for over two years.
+        'bertrand.bouyx@assemblee-nationale.fr', // [VERIFIED 2026-09-08]
+                                                 //   Horizons, foreign affairs
+                                                 //   commission
       ],
     },
   ],

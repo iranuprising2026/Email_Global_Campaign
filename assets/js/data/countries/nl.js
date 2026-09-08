@@ -126,7 +126,7 @@ politicians: [
     primary: 'j.paternotte@tweedekamer.nl',
     cc: [
       'a.podt@tweedekamer.nl',
-      'h.vanderwerf@tweedekamer.nl',
+      'j.vdwerf@tweedekamer.nl',
     ],
   },
 
@@ -145,7 +145,7 @@ politicians: [
     party: 'PRO',
     primary: 'j.klaver@tweedekamer.nl',
     cc: [
-      't.vanderlee@tweedekamer.nl',
+      't.vdlee@tweedekamer.nl',
       'k.piri@tweedekamer.nl',
     ],
   },
@@ -167,14 +167,14 @@ politicians: [
     primary: 'h.bontenbal@tweedekamer.nl',
     cc: [
       'h.krul@tweedekamer.nl',
-      'm.vanlanschot@tweedekamer.nl',
+      'm.vlanschot@tweedekamer.nl',
     ],
   },
 
   {
     name: 'Joost Eerdmans',
     party: 'JA21',
-    primary: 'j.eerdmans@tweedekamer.nl',
+    primary: 'b.eerdmans@tweedekamer.nl',
     cc: [
       's.ceulemans@tweedekamer.nl',
       'm.hoogeveen@tweedekamer.nl',
@@ -182,13 +182,23 @@ politicians: [
   },
 
   {
-    name: 'Lidewij de Vos',
+    // Was Lidewij de Vos until 2026-09-08. She is no longer a member of the
+    // Kamer, so her address was dead and this entry could not be delivered.
+    // Ralf Dekker replaces her because he is FVD's member of the Vaste
+    // commissie voor Buitenlandse Zaken -- the same "party's foreign-affairs
+    // figure" rule every other entry in this file follows. He was already in
+    // the CC below, so only the To line really changed.
+    name: 'Ralf Dekker',
     party: 'FVD',
-    primary: 'l.devos@tweedekamer.nl',
+    primary: 'r.dekker@tweedekamer.nl', // [VERIFIED 2026-09-08] FVD on the
+                                        //   foreign affairs committee
     cc: [
-      'r.dekker@tweedekamer.nl',
-      't.russcher@tweedekamer.nl',
-      'partij@fvd.nl',
+      't.russcher@tweedekamer.nl',       // [VERIFIED 2026-09-08]
+      'g.f.c.vmeijeren@tweedekamer.nl',  // [VERIFIED 2026-09-08] Gideon van
+                                         //   Meijeren. Note the initials: it is
+                                         //   NOT g.vanmeijeren@
+      'partij@fvd.nl',                   // [VERIFIED 2026-09-08] party office,
+                                         //   listed on fvd.nl/contact
     ],
   },
 
@@ -197,8 +207,8 @@ politicians: [
     party: 'BBB',
     primary: 'h.vermeer@tweedekamer.nl',
     cc: [
-      'c.vanderplas@tweedekamer.nl',
-      'f.wiersma@tweedekamer.nl',
+      'c.vdplas@tweedekamer.nl',
+      'f.m.wiersma@tweedekamer.nl',
     ],
   },
 
@@ -207,7 +217,7 @@ politicians: [
     party: 'DENK',
     primary: 's.vbaarle@tweedekamer.nl',
     cc: [
-      'i.elabassi@tweedekamer.nl',
+      'i.eabassi@tweedekamer.nl',
       'd.ergin@tweedekamer.nl',
     ],
   },
@@ -217,7 +227,7 @@ politicians: [
     party: 'SGP',
     primary: 'c.stoffer@tweedekamer.nl',
     cc: [
-      'd.vandijk@tweedekamer.nl',
+      'd.j.h.vdijk@tweedekamer.nl',
       'a.flach@tweedekamer.nl',
       'sgp@tweedekamer.nl',
     ],
@@ -226,9 +236,9 @@ politicians: [
   {
     name: 'Christine Teunissen',
     party: 'PvdD',
-    primary: 'c.teunissen@tweedekamer.nl',
+    primary: 'christine.teunissen@tweedekamer.nl',
     cc: [
-      'i.kostic@tweedekamer.nl',
+      'ines.kostic@tweedekamer.nl',
       'esther.ouwehand@tweedekamer.nl',
       'partijvoordedieren@tweedekamer.nl',
     ],
@@ -261,7 +271,7 @@ politicians: [
     party: '50PLUS',
     primary: 'j.struijs@tweedekamer.nl',
     cc: [
-      'c.vanbrenk@tweedekamer.nl',
+      'c.vbrenk@tweedekamer.nl',
       'tweedekamerfractie50PLUS@tweedekamer.nl',
     ],
   },
