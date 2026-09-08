@@ -260,18 +260,26 @@ export default {
     },
 
     {
-      // Renew Europe, the liberals. Al-Sahlani is the MEP most publicly
-      // identified with Iran in the whole Parliament -- she cut off her hair in
-      // the plenary chamber for Mahsa Amini -- and she signed the January
-      // motion. Groothuis was the first Renew name on it.
-      name: 'Abir Al-Sahlani',
+      // Renew Europe, the liberals. Groothuis was the first Renew name on the
+      // January 2026 motion -- the group's own way of marking who leads on
+      // this -- so the letter goes to him.
+      //
+      // Abir Al-Sahlani is directly below in the CC. She is the MEP most
+      // publicly identified with Iran in the whole Parliament, having cut off
+      // her hair in the plenary chamber for Mahsa Amini, and she signed the
+      // same motion. Either of them is a defensible main recipient; this was
+      // the organisers' choice on 2026-09-08. If it is ever swapped back,
+      // remember the Live Action Tracker stores the recipient's name, so the
+      // chart entry starts again under the new one.
+      name: 'Bart Groothuis',
       party: 'Renew',
-      primary: 'abir.alsahlani@europarl.europa.eu', // [VERIFIED 2026-09-08] MEP 197400.
-                                                    //   Signed RC-B10-0071/2026.
-                                                    //   NOT abir.al-sahlani@
+      primary: 'bart.groothuis@europarl.europa.eu', // [VERIFIED 2026-09-08] MEP 197780.
+                                                    //   First Renew signatory,
+                                                    //   RC-B10-0071/2026
       cc: [
-        'bart.groothuis@europarl.europa.eu',     // [VERIFIED 2026-09-08] MEP 197780.
-                                                 //   First Renew signatory, RC-B10-0071/2026
+        'abir.alsahlani@europarl.europa.eu',     // [VERIFIED 2026-09-08] MEP 197400.
+                                                 //   Signed RC-B10-0071/2026.
+                                                 //   NOT abir.al-sahlani@
         'petras.austrevicius@europarl.europa.eu',// [VERIFIED 2026-09-08] MEP 124766.
                                                  //   Signed both the January and April 2026
                                                  //   Iran motions
