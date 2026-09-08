@@ -94,7 +94,31 @@ export default {
    * UPDATED by Iranuprising2026, August 16, 2026
    */
    
-demands: {
+/**
+   * Subject lines that replace the shared ones, where the shared one is wrong.
+   *
+   * ⚠️ THE SAME REASON AS `demands` ABOVE. Two of the five letters carry a
+   * subject line about closing the Islamic Republic embassy -- Version 2
+   * ("Close the embassy and freeze IRGC assets") and Version 5 ("Demand for
+   * immediate closure of the Iranian embassy"). Canada closed that embassy in
+   * 2012. The letter bodies were already fixed with `demands`, but the subject
+   * lines were not, so until this field existed a Canadian MP received a letter
+   * whose subject asked for something done thirteen years earlier while the
+   * text asked for sanctions. The subject is the first thing they read.
+   *
+   * Versions 1, 3 and 4 do not mention the embassy, so they are not listed
+   * here and keep the shared subject. Anything left out falls back that way.
+   */
+  subjectOverrides: {
+    'Version 2': {
+      en: 'Stop the executions in Iran: Sanction those responsible and enforce the IRGC listing',
+    },
+    'Version 5': {
+      en: 'Execution Crisis: Targeted sanctions and full enforcement of the IRGC listing demanded',
+    },
+  },
+
+  demands: {
   default: {
     en: "Canada must impose targeted sanctions on those responsible for the executions and death sentences, fully enforce the IRGC's terrorist listing through investigations and prosecutions, dismantle regime-linked networks operating in Canada, seize their assets, and lead an international effort to stop the executions",
   },

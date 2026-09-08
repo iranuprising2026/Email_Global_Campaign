@@ -71,6 +71,36 @@ function demandsFor(country, versionId, language) {
 }
 
 /**
+ * The subject line for one version, letting a country replace the shared one.
+ *
+ * WHY THIS EXISTS. The five letters carry fixed subject lines, and two of them
+ * name the embassy -- "Close the embassy and freeze IRGC assets" (Version 2)
+ * and "Demand for immediate closure of the Iranian embassy" (Version 5). That
+ * is right for the Netherlands, Germany, Sweden, France and the UK, which all
+ * still host an Islamic Republic embassy. It is wrong for Canada, which closed
+ * that embassy in 2012, and for the European Parliament, which never had one.
+ * Their letter BODIES already say something else, via `demands`; without this
+ * their subject contradicted their own text, and a recipient reads the subject
+ * first.
+ *
+ * So a country file may carry an optional `subjectOverrides` keyed by version
+ * id, exactly like `demands`:
+ *
+ *   subjectOverrides: {
+ *     'Version 2': { en: 'Stop the executions in Iran: ...' },
+ *   }
+ *
+ * Anything not overridden falls back to the issue's shared subject, so the
+ * five countries above are untouched and a country needs no such field at all.
+ * The fallback is deliberate rather than an error: a missing subject must never
+ * stop a supporter from sending. Use the subject check in CLAUDE.md to catch an
+ * override that does not cover every language a country offers.
+ */
+function subjectFor(country, versionId, language, version) {
+  return country.subjectOverrides?.[versionId]?.[language] || version.subject[language];
+}
+
+/**
  * Build the ready-to-send email for one country, issue, politician and version.
  *
  * Two languages come back:
@@ -163,8 +193,8 @@ export function buildEmail({
 
   return {
     subject: {
-      sent: fillTemplate(version.subject[lang], sent),
-      en: fillTemplate(version.subject.en, english),
+      sent: fillTemplate(subjectFor(country, versionId, lang, version), sent),
+      en: fillTemplate(subjectFor(country, versionId, 'en', version), english),
     },
     body: {
       sent: fillTemplate(version.body[lang], sent),
