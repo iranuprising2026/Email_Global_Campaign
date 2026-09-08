@@ -15,6 +15,16 @@ Nothing here requires you to be a programmer.
 
 ---
 
+> **New here, or not a programmer?** Read [START-HERE.md](START-HERE.md) first —
+> it is a five-minute version of this guide covering how to run the site, how to
+> publish, where to change things, and what to be careful with. Come back here
+> for the step-by-step detail.
+>
+> **[ISSUES.md](ISSUES.md) is the list of possible issues** — everything
+> currently known to be wrong, unverified, or worth a second look, worst first.
+> Read it before changing any letter or address. Two live letters currently ask
+> for things that have already been achieved.
+
 ## Table of contents
 
 1. [What the site does](#1-what-the-site-does)
@@ -29,6 +39,7 @@ Nothing here requires you to be a programmer.
 10. [Project structure](#10-project-structure)
 11. [Maintenance](#11-maintenance)
 12. [Open items and decisions, for later](#12-open-items-and-decisions-for-later)
+13. [Possible issues](#13-possible-issues)
 
 ---
 
@@ -1246,6 +1257,30 @@ expansion.
   `assets/js/data/index.js` has no `fi:` line, so a Finnish country would display
   the raw code. One line, whenever Finland is added.
 
+
+---
+
+## 13. Possible issues
+
+**The live list lives in [ISSUES.md](ISSUES.md).** It is kept separate from this
+guide because it changes far more often, and because it is the one page worth
+reading before you touch a letter or an address.
+
+It covers everything currently known to be wrong, unverified, or worth a second
+look, worst first, in plain language. As of 8 September 2026 the two most
+serious entries are:
+
+- **The EU listed the IRGC as a terrorist organisation on 19 February 2026**, so
+  the European Parliament letters ask for something already won — and they are
+  addressed to the very MEPs who won it.
+- **"Freeze IRGC assets" is now automatic EU law**, so the Dutch, German,
+  Swedish and French letters ask their parliaments for something already
+  required of them. The embassy half of those letters is unaffected and still
+  correct.
+
+Section 12 above is the older list of deliberately unfinished work. Where the
+two overlap, ISSUES.md is the one being kept current — close an item in both, or
+one of them will lie.
 
 ---
 

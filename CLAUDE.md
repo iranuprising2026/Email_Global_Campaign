@@ -118,6 +118,15 @@ assets/js/
                             COUNTRY_BAR_COLOR, trackerTopic, renderTracker.
   app.js                    The ONLY file that touches the DOM.
 docs/supabase-schema.sql    Table + RLS policies (reconstructed, see Open questions).
+ISSUES.md                   Running list of possible issues in plain language,
+                            worst first, with a Closed section. The human-facing
+                            twin of **Open questions** here -- close an item in
+                            both. Linked from README (section 13) and
+                            START-HERE.md.
+START-HERE.md               Five-minute plain-language onboarding: run locally,
+                            publish, where to edit, the site's logic, and the
+                            list of things that break the project. Points at
+                            README.md for detail; keep the two in step.
 README.md                   Non-technical maintainer guide.
 CLAUDE.md                   This file.
 DESIGN.md                   Mithra brand reference (fonts + palette) from the
@@ -257,7 +266,10 @@ offers plus `en`:
 node --input-type=module -e "
 const d = await import('./assets/js/data/index.js');
 const e = await import('./assets/js/email.js');
-const EMBASSY = /embassy|botschaft|ambassade|ambasciata|embajada|ambassad|ambasada|embaixada/i;
+// NOT just the word 'embassy': V4's subject threatens expulsion instead
+// ('face departure' / 'Abbruch der Beziehungen' / 'rupture'), which is the
+// same demand in different words. Grepping only 'embassy' missed it once.
+const EMBASSY = /embassy|botschaft|ambassade|ambasciata|embajada|ambassad|ambasada|embaixada|face departure|vertrek|Abbruch der Beziehungen|avbrott i relationerna|rupture|diplomatic relations/i;
 const NO_EMBASSY = new Set(['ca', 'eu']);
 const fails = [];
 for (const c of d.countries)
@@ -711,12 +723,22 @@ Unverified — confirm before relying on, and update this section once known:
   **Fixed 2026-09-08** with `subjectOverrides` in `email.js` — see **Gotchas**.
   Adding a 6th version now touches a fourth place if its subject names the
   embassy: `ca.js` and `eu.js` would each need an override for it.
-- **The EP's `demands` assume the Council still has not listed the IRGC.**
-  True as of the 22 Jan 2026 and Apr 2026 resolutions, both of which call on
-  the Council to do it — i.e. it had not happened by then. Not re-checked
-  against Council decisions since; if the listing has since gone through, the
-  EP letters demand something already done. Same failure mode as Canada's
-  pre-rewrite wording.
+- **THE COUNCIL LISTED THE IRGC ON 2026-02-19. The EP's `demands` are stale
+  and so is half of NL/DE/SE/FR's.** Verified in the Official Journal, not from
+  press coverage: Council Decision (CFSP) 2026/421 + Implementing Regulation
+  (EU) 2026/420, both 19 Feb 2026, after political agreement on 29 Jan; still
+  in force via Decision (CFSP) 2026/455, which I read line by line — it lists
+  `Islamic Revolutionary Guard Corps (IRGC)`. **Basij and Quds Force are NOT
+  separately listed**, so that half of the EP's ask survives, as does
+  enforcement. Reg 2580/2001 is directly applicable in all 27, so "freeze IRGC
+  assets" in `nl/de/se/fr.js` is now a legal obligation rather than an ask —
+  their embassy/expulsion demands are national competence and unaffected.
+  Canada and the UK were already written around *enforcement* and are fine.
+  **Root cause worth remembering: `eu.js`'s demands were built from paragraph 5
+  of the 22 Jan 2026 resolution without asking whether its demand had since
+  been met — the Council acted 7 days later.** Verifying that a resolution
+  exists is not verifying that its demand is still open. Tracked for humans in
+  ISSUES.md items 1-2.
 - ~~**Not yet fixed (found 2026-09-08).**~~ **All 16 fixed 2026-09-08.** See
   the Log. Three entries changed recipient — `nl` FVD (de Vos → Ralf Dekker),
   `se` M (Kristersson → Margareta Cederfelt) and `se` KD (Busch → Magnus
